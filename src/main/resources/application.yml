@@ -5,13 +5,29 @@ server:
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${MYSQL_ADDRESS}/${MYSQL_DATABASE:springboot_demo}
-    username: ${MYSQL_USERNAME}
-    password: ${MySQL_PASSWORD}
-  mvc:
-    view:
-      suffix: .html
-      prefix: /
+#    url: jdbc:mysql://${MYSQL_ADDRESS}/${MYSQL_DATABASE:springboot_demo}
+#    username: ${MYSQL_USERNAME}
+#    password: ${MySQL_PASSWORD}
+    url: jdbc:mysql://127.0.0.1:3306/springboot_demo
+    username: root
+    password:
+#  mvc:
+#    view:
+#      suffix: .html
+#      prefix: /
 
 mybatis:
   mapper-locations: classpath*:mapper/*Mapper.xml
+
+
+wx:
+  app-id: xxxxxxxxxxxx
+  app-secret: xxxxxxxxxxxx
+  #商户号
+  mch-id: xxxxxxxxxxxx
+  #商户密钥
+  mch-key: xxxxxxxxxxxx
+  #回调地址 保证外网能访问
+  notify-url: xxxxxxxxxxxx
+  #p12证书的位置，可以绝对路径，可以指定类路径 以classpath:开头
+  key-path: xxxxxxxxxxxx
