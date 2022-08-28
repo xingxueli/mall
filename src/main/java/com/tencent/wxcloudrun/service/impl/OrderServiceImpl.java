@@ -114,7 +114,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
         return roomAndHotelRegisterDto;
     }
 
-    public List<OrderStatusCount>  orderStatusCount(OrderRequest orderRequest){
+    public List<OrderStatusCount>  orderStatusCount(Integer or){
         return this.getBaseMapper().orderStatusCount();
     }
 

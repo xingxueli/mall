@@ -44,9 +44,8 @@ public class OrderController {
     }
 
     @GetMapping(value = "/orderStatus/count")
-    ApiResponse orderStatusCount(@RequestBody OrderRequest orderRequest) {
-
-        final List<OrderStatusCount> orderStatusCounts = orderService.orderStatusCount(orderRequest);
+    ApiResponse orderStatusCount(@RequestParam(required = false) Integer orderStatus) {
+        final List<OrderStatusCount> orderStatusCounts = orderService.orderStatusCount(orderStatus);
         return ApiResponse.ok(orderStatusCounts);
     }
 

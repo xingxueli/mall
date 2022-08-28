@@ -11,7 +11,7 @@ import java.util.List;
 public interface OrderService extends IService<TOrder>{
 
     OrderResponse  getOrderList(OrderRequest orderRequest);
-    List<OrderStatusCount> orderStatusCount(OrderRequest orderRequest);
+    List<OrderStatusCount> orderStatusCount(Integer orderStatus);
     void cancel(OrderRequest orderRequest);
     boolean create(OrderRequest orderRequest);
 }
