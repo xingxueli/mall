@@ -9,11 +9,12 @@ import java.time.LocalDateTime;
 public class GuestRoom implements Serializable {
 
   private Integer id;
+  private Integer storeId;
 
   private String roomPrice;
   private String roomOriginPrice;
 
-  private String roomStatus;
+  private Integer roomStatus;
   private String roomName;
   private String roomNum;
   private String imageUrl;
