@@ -35,7 +35,7 @@ public class OrderController {
         this.logger = LoggerFactory.getLogger(OrderController.class);
     }
 
-    @GetMapping(value = "/list")
+    @PostMapping(value = "/list")
     ApiResponse list(@RequestBody OrderRequest orderRequest) {
         logger.info("OrderController list");
 
