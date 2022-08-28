@@ -23,7 +23,7 @@ public class GuestRoomServiceImpl extends ServiceImpl<GuestRoomMapper, GuestRoom
         RoomResponse roomResponse = new RoomResponse();
 
         QueryWrapper<GuestRoom> queueWrapper = new QueryWrapper<>();
-        if(roomRequest.getRoomNum() != null){
+        if(StringUtils.isNotEmpty(roomRequest.getRoomNum())){
             queueWrapper.eq("room_num",roomRequest.getRoomNum());
         }
         Page<GuestRoom> pageCondition = new Page<>(roomRequest.getPageNum(),roomRequest.getPageSize());
