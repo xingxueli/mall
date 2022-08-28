@@ -39,8 +39,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
 
     final ThreadLocalRandom current = ThreadLocalRandom.current();
 
-    @Autowired
-    WxPayService wxPayService;
+//    @Autowired
+//    WxPayService wxPayService;
 
     public OrderResponse  getOrderList(OrderRequest orderRequest){
         OrderResponse orderResponse = new OrderResponse();
