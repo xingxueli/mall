@@ -50,9 +50,17 @@ public class OrderController {
     }
 
     @PostMapping(value = "/create")
-    ApiResponse create(@RequestBody OrderRequest request) {
+    ApiResponse create(@RequestBody OrderRequest orderRequest) {
 
-        final boolean saveResult = orderService.create(request);
+        Preconditions.checkNotNull(orderRequest.getOrderName());
+        Preconditions.checkNotNull(orderRequest.getOrderMobile());
+        Preconditions.checkNotNull(orderRequest.getStartTime());
+        Preconditions.checkNotNull(orderRequest.getEndTime());
+        Preconditions.checkNotNull(orderRequest.getGuestRoomId());
+        Preconditions.checkNotNull(orderRequest.getRemark());
+        Preconditions.checkNotNull(orderRequest.getTotalAmount());
+
+        final boolean saveResult = orderService.create(orderRequest);
         if(saveResult){
             return ApiResponse.ok(0);
         }else {

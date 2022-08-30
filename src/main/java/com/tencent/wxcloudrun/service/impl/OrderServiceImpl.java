@@ -150,8 +150,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
 //            logger.info("WxPayException={}",e);
 //        }
 
+        final String orderNum = generateOrderNum();
         TOrder order = new TOrder();
-        order.setOrderNum(generateOrderNum());
+        order.setOrderNum(orderNum);
         order.setOrderName(orderRequest.getOrderName());
         order.setOrderMobile(orderRequest.getOrderMobile());
         order.setStartTime(orderRequest.getStartTime());
@@ -160,7 +161,17 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
         order.setTotalAmount(orderRequest.getTotalAmount());
         order.setDiscountAmount(0);
         order.setCreateTime(new Date());
+        order.setUid("23446435fdasgdsfsafdsa");
         final boolean saveResult = this.save(order);
+
+        HotelRegisterRequest hotelRegisterRequest = new HotelRegisterRequest();
+        hotelRegisterRequest.setGuestRoomId(orderRequest.getGuestRoomId());
+        hotelRegisterRequest.setStartTime(orderRequest.getStartTime());
+        hotelRegisterRequest.setEndTime(orderRequest.getEndTime());
+        hotelRegisterRequest.setRemark(orderRequest.getRemark());
+        hotelRegisterRequest.setOrderNum(orderNum);
+        hotelRegisterRequest.setOrderId(order.getId());
+        hotelRegisterService.saveHotelRegister(hotelRegisterRequest);
         return saveResult;
     }
 

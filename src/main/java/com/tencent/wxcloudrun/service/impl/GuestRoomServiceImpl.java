@@ -24,8 +24,12 @@ public class GuestRoomServiceImpl extends ServiceImpl<GuestRoomMapper, GuestRoom
 
         QueryWrapper<GuestRoom> queueWrapper = new QueryWrapper<>();
         if(StringUtils.isNotEmpty(roomRequest.getRoomNum())){
-            queueWrapper.eq("room_num",roomRequest.getRoomNum());
+            queueWrapper.like("room_num",roomRequest.getRoomNum());
         }
+        if(StringUtils.isNotEmpty(roomRequest.getRoomName())){
+            queueWrapper.like("room_name",roomRequest.getRoomName());
+        }
+        queueWrapper.eq("room_shelves",1);//只展示上架的房间
         Page<GuestRoom> pageCondition = new Page<>(roomRequest.getPageNum(),roomRequest.getPageSize());
         final Page<GuestRoom> page = this.page(pageCondition, queueWrapper);
         roomResponse.setPageNum(roomRequest.getPageNum());
@@ -48,6 +52,9 @@ public class GuestRoomServiceImpl extends ServiceImpl<GuestRoomMapper, GuestRoom
             roomItem.setTitle(r.getRoomName());
             roomItem.setStoreId(r.getStoreId());
             roomItem.setRoomStatus(r.getRoomStatus());
+            roomItem.setStoreId(r.getStoreId());
+            roomItem.setStoreName(r.getStoreName());
+            roomItem.setCreateTime(r.getCreateTime());
             if (StringUtils.isNotEmpty(r.getTags())) {
                 roomItem.setTags(JSON.parseArray(r.getTags(), String.class));
             }

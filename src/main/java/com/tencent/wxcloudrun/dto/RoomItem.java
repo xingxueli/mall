@@ -1,8 +1,10 @@
 package com.tencent.wxcloudrun.dto;
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -13,8 +15,13 @@ public class RoomItem {
 
     private String title;//room名称
     private String price;
+    private String storeName;
+    private Integer type;
     private String originPrice;
     private Integer roomStatus;
+
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
+    private Date createTime;
 
     private List<String> tags;
 }
