@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tencent.wxcloudrun.dao.GuestRoomMapper;
 import com.tencent.wxcloudrun.dto.*;
 import com.tencent.wxcloudrun.enums.OrderStatusEnum;
+import com.tencent.wxcloudrun.enums.RoomType;
 import com.tencent.wxcloudrun.model.GuestRoom;
 import com.tencent.wxcloudrun.service.GuestRoomService;
 import org.apache.commons.lang3.StringUtils;
@@ -46,8 +47,8 @@ public class GuestRoomServiceImpl extends ServiceImpl<GuestRoomMapper, GuestRoom
         return records.stream().map(r -> {
             RoomItem roomItem = new RoomItem();
             roomItem.setSpuId(r.getId());
-            roomItem.setPrice(r.getRoomPrice());
-            roomItem.setOriginPrice(r.getRoomOriginPrice());
+            roomItem.setPrice(Integer.parseInt(r.getRoomPrice()));
+            roomItem.setOriginPrice(Integer.parseInt(r.getRoomOriginPrice()));
             roomItem.setThumb(r.getImageUrl());
             roomItem.setTitle(r.getRoomName());
             roomItem.setStoreId(r.getStoreId());
@@ -55,6 +56,14 @@ public class GuestRoomServiceImpl extends ServiceImpl<GuestRoomMapper, GuestRoom
             roomItem.setStoreId(r.getStoreId());
             roomItem.setStoreName(r.getStoreName());
             roomItem.setCreateTime(r.getCreateTime());
+            roomItem.setType(r.getType());
+            roomItem.setTypeString(RoomType.getRoomTypeName(r.getType()));
+            roomItem.setRoomNum(r.getRoomNum());
+            if(roomItem.getRoomStatus().intValue() == 1){
+                roomItem.setRoomStatusString("已预定");
+            }else{
+                roomItem.setRoomStatusString("可预定");
+            }
             if (StringUtils.isNotEmpty(r.getTags())) {
                 roomItem.setTags(JSON.parseArray(r.getTags(), String.class));
             }

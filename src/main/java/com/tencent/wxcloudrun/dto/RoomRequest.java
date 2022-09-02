@@ -20,4 +20,10 @@ public class RoomRequest extends BaseRequest{
   private String roomPrice;//客房价格
   private String roomOriginPrice;//客房划线价格
 
+  private String title;//客房名称 为了满足vue的表单验证
+  private String thumb;//图片地址 为了满足vue的表单验证
+  private Integer spuId;//图片地址 为了满足vue的表单验证
+  private String price;//客房价格
+  private String originPrice;//客房划线价格
+
 }

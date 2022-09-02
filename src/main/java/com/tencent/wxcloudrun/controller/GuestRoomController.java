@@ -41,11 +41,11 @@ public class GuestRoomController {
     @PostMapping(value = "/create")
     ApiResponse create(@RequestBody RoomRequest roomRequest) {
         logger.info("GuestRoomController create");
+        Preconditions.checkNotNull(roomRequest.getTitle());
+        Preconditions.checkNotNull(roomRequest.getThumb());
         Preconditions.checkNotNull(roomRequest.getRoomNum());
-        Preconditions.checkNotNull(roomRequest.getRoomName());
         Preconditions.checkNotNull(roomRequest.getRoomPrice());
         Preconditions.checkNotNull(roomRequest.getRoomOriginPrice());
-        Preconditions.checkNotNull(roomRequest.getImageUrl());
         Preconditions.checkNotNull(roomRequest.getStoreId());
         Preconditions.checkNotNull(roomRequest.getStoreName());
         Preconditions.checkNotNull(roomRequest.getType());
@@ -53,11 +53,11 @@ public class GuestRoomController {
         GuestRoom guestRoom = new GuestRoom();
         guestRoom.setRoomStatus(0);//初始化    客房状态   0 未预定 1 已预定
         guestRoom.setRoomNum(roomRequest.getRoomNum());
-        guestRoom.setRoomName(roomRequest.getRoomName());
+        guestRoom.setRoomName(roomRequest.getTitle());
         guestRoom.setRoomPrice(roomRequest.getRoomPrice());
         guestRoom.setRoomOriginPrice(roomRequest.getRoomOriginPrice());
         guestRoom.setCreateTime(new Date());
-        guestRoom.setImageUrl(roomRequest.getImageUrl());
+        guestRoom.setImageUrl(roomRequest.getThumb());
         guestRoom.setStoreId(roomRequest.getStoreId());
         guestRoom.setStoreName(roomRequest.getStoreName());
         guestRoom.setType(roomRequest.getType());
@@ -73,16 +73,16 @@ public class GuestRoomController {
     @PostMapping(value = "/update")
     ApiResponse update(@RequestBody RoomRequest roomRequest) {
         logger.info("GuestRoomController update");
-        Preconditions.checkNotNull(roomRequest.getId());
+        Preconditions.checkNotNull(roomRequest.getSpuId());
 
         GuestRoom guestRoom = new GuestRoom();
-        guestRoom.setId(roomRequest.getId());
+        guestRoom.setId(roomRequest.getSpuId());
         guestRoom.setRoomNum(roomRequest.getRoomNum());
-        guestRoom.setRoomName(roomRequest.getRoomName());
-        guestRoom.setRoomPrice(roomRequest.getRoomPrice());
-        guestRoom.setRoomOriginPrice(roomRequest.getRoomOriginPrice());
+        guestRoom.setRoomName(roomRequest.getTitle());
+        guestRoom.setRoomPrice(roomRequest.getPrice());
+        guestRoom.setRoomOriginPrice(roomRequest.getOriginPrice());
         guestRoom.setUpdateTime(new Date());
-        guestRoom.setImageUrl(roomRequest.getImageUrl());
+        guestRoom.setImageUrl(roomRequest.getThumb());
         guestRoom.setStoreId(roomRequest.getStoreId());
         guestRoom.setStoreName(roomRequest.getStoreName());
         guestRoom.setType(roomRequest.getType());

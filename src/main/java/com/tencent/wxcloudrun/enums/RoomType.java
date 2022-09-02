@@ -19,5 +19,14 @@ public enum RoomType {
         this.code = code;
         this.name = sourceTigerName;
     }
+
+    public static String getRoomTypeName(int code){
+        for (RoomType roomType : RoomType.values()) {
+            if(roomType.code == code){
+                return roomType.name;
+            }
+        }
+        return RoomType.UNKNOWN.getName();
+    }
     
 }
