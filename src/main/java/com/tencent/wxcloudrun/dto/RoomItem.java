@@ -21,6 +21,7 @@ public class RoomItem {
     private Integer originPrice;
     private Integer roomStatus;
     private String roomStatusString;
+    private String roomShelvesString;
     private String roomNum;
 
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone="GMT+8")

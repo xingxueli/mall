@@ -30,7 +30,9 @@ public class GuestRoomServiceImpl extends ServiceImpl<GuestRoomMapper, GuestRoom
         if(StringUtils.isNotEmpty(roomRequest.getRoomName())){
             queueWrapper.like("room_name",roomRequest.getRoomName());
         }
-        queueWrapper.eq("room_shelves",1);//只展示上架的房间
+        if(roomRequest.getFromApplet() == null || roomRequest.getFromApplet().intValue() == 1){
+            queueWrapper.eq("room_shelves",1);//只展示上架的房间
+        }
         Page<GuestRoom> pageCondition = new Page<>(roomRequest.getPageNum(),roomRequest.getPageSize());
         final Page<GuestRoom> page = this.page(pageCondition, queueWrapper);
         roomResponse.setPageNum(roomRequest.getPageNum());
@@ -59,10 +61,15 @@ public class GuestRoomServiceImpl extends ServiceImpl<GuestRoomMapper, GuestRoom
             roomItem.setType(r.getType());
             roomItem.setTypeString(RoomType.getRoomTypeName(r.getType()));
             roomItem.setRoomNum(r.getRoomNum());
-            if(roomItem.getRoomStatus().intValue() == 1){
+            if(r.getRoomStatus().intValue() == 1){
                 roomItem.setRoomStatusString("已预定");
-            }else{
+            }else if(r.getRoomStatus().intValue() == 0){
                 roomItem.setRoomStatusString("可预定");
+            }
+            if(r.getRoomShelves().intValue() == 1){
+                roomItem.setRoomShelvesString("上架");
+            }else if(r.getRoomShelves().intValue() == 2){
+                roomItem.setRoomShelvesString("下架");
             }
             if (StringUtils.isNotEmpty(r.getTags())) {
                 roomItem.setTags(JSON.parseArray(r.getTags(), String.class));

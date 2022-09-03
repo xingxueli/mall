@@ -26,4 +26,5 @@ public class RoomRequest extends BaseRequest{
   private String price;//客房价格
   private String originPrice;//客房划线价格
 
+  private Integer fromApplet;//如果是从小程序过来的调用，才过滤上架，vue过来调用不过滤      1 从小程序过来  2 从vue后台过来
 }

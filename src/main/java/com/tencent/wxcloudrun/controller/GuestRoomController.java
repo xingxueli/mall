@@ -5,6 +5,7 @@ import com.google.common.base.Preconditions;
 import com.tencent.wxcloudrun.config.ApiResponse;
 import com.tencent.wxcloudrun.dto.RoomRequest;
 import com.tencent.wxcloudrun.dto.RoomResponse;
+import com.tencent.wxcloudrun.enums.StoreEnum;
 import com.tencent.wxcloudrun.model.GuestRoom;
 import com.tencent.wxcloudrun.service.GuestRoomService;
 import org.slf4j.Logger;
@@ -44,22 +45,21 @@ public class GuestRoomController {
         Preconditions.checkNotNull(roomRequest.getTitle());
         Preconditions.checkNotNull(roomRequest.getThumb());
         Preconditions.checkNotNull(roomRequest.getRoomNum());
-        Preconditions.checkNotNull(roomRequest.getRoomPrice());
-        Preconditions.checkNotNull(roomRequest.getRoomOriginPrice());
+        Preconditions.checkNotNull(roomRequest.getPrice());
+        Preconditions.checkNotNull(roomRequest.getOriginPrice());
         Preconditions.checkNotNull(roomRequest.getStoreId());
-        Preconditions.checkNotNull(roomRequest.getStoreName());
         Preconditions.checkNotNull(roomRequest.getType());
 
         GuestRoom guestRoom = new GuestRoom();
         guestRoom.setRoomStatus(0);//初始化    客房状态   0 未预定 1 已预定
         guestRoom.setRoomNum(roomRequest.getRoomNum());
         guestRoom.setRoomName(roomRequest.getTitle());
-        guestRoom.setRoomPrice(roomRequest.getRoomPrice());
-        guestRoom.setRoomOriginPrice(roomRequest.getRoomOriginPrice());
+        guestRoom.setRoomPrice(roomRequest.getPrice());
+        guestRoom.setRoomOriginPrice(roomRequest.getOriginPrice());
         guestRoom.setCreateTime(new Date());
         guestRoom.setImageUrl(roomRequest.getThumb());
         guestRoom.setStoreId(roomRequest.getStoreId());
-        guestRoom.setStoreName(roomRequest.getStoreName());
+        guestRoom.setStoreName(StoreEnum.getStoreName(roomRequest.getStoreId()));
         guestRoom.setType(roomRequest.getType());
         guestRoomService.save(guestRoom);
         return ApiResponse.ok();
@@ -84,7 +84,9 @@ public class GuestRoomController {
         guestRoom.setUpdateTime(new Date());
         guestRoom.setImageUrl(roomRequest.getThumb());
         guestRoom.setStoreId(roomRequest.getStoreId());
-        guestRoom.setStoreName(roomRequest.getStoreName());
+        if(roomRequest.getStoreId() != null){
+            guestRoom.setStoreName(StoreEnum.getStoreName(roomRequest.getStoreId()));
+        }
         guestRoom.setType(roomRequest.getType());
         guestRoomService.updateById(guestRoom);
         return ApiResponse.ok();
