@@ -9,7 +9,7 @@ import java.util.Date;
 @Data
 public class HotelRegisterRequest{
 
-  private Integer id;
+  private Integer hotelRegisterId;
   private Integer guestRoomId;
   private Integer orderId;
 
@@ -23,10 +23,10 @@ public class HotelRegisterRequest{
 
   @DateTimeFormat(pattern = "yyyy-MM-dd")
   @JsonFormat(pattern="yyyy-MM-dd",timezone="GMT+8")
-  private Date startTime;
+  private Date actualStartTime;
 
   @DateTimeFormat(pattern = "yyyy-MM-dd")
   @JsonFormat(pattern="yyyy-MM-dd",timezone="GMT+8")
-  private Date endTime;
+  private Date actualEndTime;
 
 }

@@ -8,7 +8,8 @@ import java.util.Date;
 @Data
 public class OrderRequest extends BaseRequest{
 
-  private Integer id;
+  private Integer orderId;
+  private Integer hotelRegisterId;
 
   private String orderNum;
   private String cancelReasonType;
@@ -24,10 +25,16 @@ public class OrderRequest extends BaseRequest{
   private Integer totalAmount;//
   private Integer discountAmount;//
   private Integer paymentAmount;//
+  private Integer payType;//支付类型(1=线上、2=线下)
+  private Integer payWay;//支付方式 1 微信支付  2 支付宝
 
   @DateTimeFormat(pattern = "yyyy-MM-dd")
-  private Date startTime;
+  private Date predictStartTime;
   @DateTimeFormat(pattern = "yyyy-MM-dd")
-  private Date endTime;
+  private Date predictEndTime;
+  @DateTimeFormat(pattern = "yyyy-MM-dd")
+  private Date actualStartTime;
+  @DateTimeFormat(pattern = "yyyy-MM-dd")
+  private Date actualEndTime;
 
 }

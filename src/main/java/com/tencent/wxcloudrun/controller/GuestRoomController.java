@@ -8,6 +8,7 @@ import com.tencent.wxcloudrun.dto.RoomResponse;
 import com.tencent.wxcloudrun.enums.StoreEnum;
 import com.tencent.wxcloudrun.model.GuestRoom;
 import com.tencent.wxcloudrun.service.GuestRoomService;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,9 @@ public class GuestRoomController {
     @PostMapping(value = "/list")
     ApiResponse list(@RequestBody RoomRequest roomRequest) {
         logger.info("GuestRoomController list");
+        if(StringUtils.isNotEmpty(roomRequest.getTitle())){
+            roomRequest.setRoomNum(roomRequest.getTitle());
+        }
         final RoomResponse roomList = guestRoomService.getRoomList(roomRequest);
         return ApiResponse.ok(roomList);
     }

@@ -7,10 +7,7 @@ import com.github.binarywang.wxpay.exception.WxPayException;
 import com.github.binarywang.wxpay.service.WxPayService;
 import com.google.common.base.Preconditions;
 import com.tencent.wxcloudrun.config.ApiResponse;
-import com.tencent.wxcloudrun.dto.CounterRequest;
-import com.tencent.wxcloudrun.dto.OrderRequest;
-import com.tencent.wxcloudrun.dto.OrderResponse;
-import com.tencent.wxcloudrun.dto.OrderStatusCount;
+import com.tencent.wxcloudrun.dto.*;
 import com.tencent.wxcloudrun.model.TOrder;
 import com.tencent.wxcloudrun.service.OrderService;
 import com.tencent.wxcloudrun.utils.DateUtils;
@@ -43,6 +40,14 @@ public class OrderController {
         return ApiResponse.ok(orderResponse);
     }
 
+    @PostMapping(value = "/webList")
+    ApiResponse webList(@RequestBody OrderRequest orderRequest) {
+        logger.info("OrderController webList");
+
+        final WebOrderResponse webOrderResponse = orderService.getWebOrderList(orderRequest);
+        return ApiResponse.ok(webOrderResponse);
+    }
+
     @GetMapping(value = "/orderStatus/count")
     ApiResponse orderStatusCount(@RequestParam(required = false) Integer orderStatus) {
         final List<OrderStatusCount> orderStatusCounts = orderService.orderStatusCount(orderStatus);
@@ -54,13 +59,57 @@ public class OrderController {
 
         Preconditions.checkNotNull(orderRequest.getOrderName());
         Preconditions.checkNotNull(orderRequest.getOrderMobile());
-        Preconditions.checkNotNull(orderRequest.getStartTime());
-        Preconditions.checkNotNull(orderRequest.getEndTime());
+        Preconditions.checkNotNull(orderRequest.getPredictStartTime());
+        Preconditions.checkNotNull(orderRequest.getPredictEndTime());
         Preconditions.checkNotNull(orderRequest.getGuestRoomId());
         Preconditions.checkNotNull(orderRequest.getRemark());
         Preconditions.checkNotNull(orderRequest.getTotalAmount());
+        Preconditions.checkNotNull(orderRequest.getPayType());
+        Preconditions.checkNotNull(orderRequest.getPayWay());
 
         final boolean saveResult = orderService.create(orderRequest);
+        if(saveResult){
+            return ApiResponse.ok(0);
+        }else {
+            return ApiResponse.error("处理错误，请联系管理员，管理员电话13888888888");
+        }
+    }
+
+    @PostMapping(value = "/webCreate")
+    ApiResponse webCreate(@RequestBody OrderRequest orderRequest) {
+
+        Preconditions.checkNotNull(orderRequest.getOrderName());
+        Preconditions.checkNotNull(orderRequest.getOrderMobile());
+        Preconditions.checkNotNull(orderRequest.getPredictStartTime());
+        Preconditions.checkNotNull(orderRequest.getPredictEndTime());
+        Preconditions.checkNotNull(orderRequest.getGuestRoomId());
+        Preconditions.checkNotNull(orderRequest.getRemark());
+        Preconditions.checkNotNull(orderRequest.getTotalAmount());
+        Preconditions.checkNotNull(orderRequest.getPayWay());
+
+        final boolean saveResult = orderService.webCreate(orderRequest);
+        if(saveResult){
+            return ApiResponse.ok(0);
+        }else {
+            return ApiResponse.error("处理错误，请联系管理员，管理员电话13888888888");
+        }
+    }
+
+    @PostMapping(value = "/webUpdate")
+    ApiResponse webUpdate(@RequestBody OrderRequest orderRequest) {
+
+        Preconditions.checkNotNull(orderRequest.getOrderId());
+
+        Preconditions.checkNotNull(orderRequest.getOrderName());
+        Preconditions.checkNotNull(orderRequest.getOrderMobile());
+        Preconditions.checkNotNull(orderRequest.getPredictStartTime());
+        Preconditions.checkNotNull(orderRequest.getPredictEndTime());
+        Preconditions.checkNotNull(orderRequest.getGuestRoomId());
+        Preconditions.checkNotNull(orderRequest.getRemark());
+        Preconditions.checkNotNull(orderRequest.getTotalAmount());
+        Preconditions.checkNotNull(orderRequest.getPayWay());
+
+        final boolean saveResult = orderService.webUpdate(orderRequest);
         if(saveResult){
             return ApiResponse.ok(0);
         }else {

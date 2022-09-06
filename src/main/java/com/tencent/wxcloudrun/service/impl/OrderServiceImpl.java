@@ -5,9 +5,12 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.binarywang.wxpay.service.WxPayService;
+import com.tencent.wxcloudrun.Intercepter.HeaderContext;
 import com.tencent.wxcloudrun.dao.OrderMapper;
 import com.tencent.wxcloudrun.dto.*;
+import com.tencent.wxcloudrun.enums.CheckType;
 import com.tencent.wxcloudrun.enums.OrderStatusEnum;
+import com.tencent.wxcloudrun.enums.PayType;
 import com.tencent.wxcloudrun.model.GuestRoom;
 import com.tencent.wxcloudrun.model.HotelRegister;
 import com.tencent.wxcloudrun.model.TOrder;
@@ -49,6 +52,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
         if(orderRequest.getOrderStatus() != null && orderRequest.getOrderStatus().intValue() != -1){
             queueWrapper.eq("order_status",orderRequest.getOrderStatus().intValue());
         }
+        queueWrapper.eq("uid", HeaderContext.getHeaders().getOpenId());
         Page<TOrder> pageCondition = new Page<>(orderRequest.getPageNum(),orderRequest.getPageSize());
         final Page<TOrder> page = this.page(pageCondition, queueWrapper);
         orderResponse.setPageNum(orderRequest.getPageNum());
@@ -77,15 +81,23 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
             List<OrderItemVo> orderItemVos = new ArrayList<>();
             OrderItemVo orderItemVo = new OrderItemVo();
             final RoomAndHotelRegisterDto roomAndHotelRegisterDto = getRoomAndHotelRegister(r.getId());
-            final GuestRoom guestRoom = roomAndHotelRegisterDto.getGuestRoom();
             final HotelRegister hotelRegister = roomAndHotelRegisterDto.getHotelRegister();
+            if(hotelRegister == null){
+                return orderVo;
+            }
+            orderItemVo.setId(String.valueOf(hotelRegister.getId()));
+
+            final GuestRoom guestRoom = roomAndHotelRegisterDto.getGuestRoom();
+            if(guestRoom == null){
+                return orderVo;
+            }
             orderItemVo.setActualPrice(guestRoom.getRoomPrice());
             orderItemVo.setOriginPrice(guestRoom.getRoomOriginPrice());
-            orderItemVo.setId(String.valueOf(hotelRegister.getId()));
             orderItemVo.setSpuId(String.valueOf(guestRoom.getType()));
             orderItemVo.setSkuId(String.valueOf(guestRoom.getId()));
             orderItemVo.setGoodsPictureUrl(guestRoom.getImageUrl());
             orderItemVo.setGoodsName(guestRoom.getRoomName());
+
             orderItemVos.add(orderItemVo);
             orderVo.setOrderItemVOs(orderItemVos);
 
@@ -103,14 +115,83 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
         }).collect(Collectors.toList());
     }
 
+    public WebOrderResponse  getWebOrderList(OrderRequest orderRequest){
+        WebOrderResponse webOrderResponse = new WebOrderResponse();
+
+        QueryWrapper<TOrder> queueWrapper = new QueryWrapper<>();
+        if(orderRequest.getOrderStatus() != null && orderRequest.getOrderStatus().intValue() != -1){
+            queueWrapper.eq("order_status",orderRequest.getOrderStatus().intValue());
+        }
+        Page<TOrder> pageCondition = new Page<>(orderRequest.getPageNum(),orderRequest.getPageSize());
+        final Page<TOrder> page = this.page(pageCondition, queueWrapper);
+        webOrderResponse.setPageNum(orderRequest.getPageNum());
+        webOrderResponse.setTotalCount(page.getTotal());
+        webOrderResponse.setPageSize(orderRequest.getPageSize());
+
+        final List<TOrder> records = page.getRecords();
+        webOrderResponse.setOrders(webTransform(records));
+        return webOrderResponse;
+    }
+
+    private List<WebOrderVo> webTransform(List<TOrder> records){
+        return records.stream().map(r -> {
+            WebOrderVo webOrderVo = new WebOrderVo();
+            webOrderVo.setOrderId(String.valueOf(r.getId()));
+            webOrderVo.setOrderNum(r.getOrderNum());
+            webOrderVo.setOrderStatus(r.getOrderStatus());
+            webOrderVo.setCancelReasonType(r.getCancelReasonType());
+            webOrderVo.setCreateTime(r.getCreateTime());
+            webOrderVo.setDiscountAmount(String.valueOf(r.getDiscountAmount()));
+            webOrderVo.setPaymentAmount(String.valueOf(r.getPaymentAmount()));
+            webOrderVo.setTotalAmount(r.getTotalAmount());
+            webOrderVo.setOrderStatusName(OrderStatusEnum.getOrderStatusName(r.getOrderStatus()));
+            webOrderVo.setOrderSatusRemark("");
+            webOrderVo.setOrderName(r.getOrderName());
+            webOrderVo.setPayType(r.getPayType());
+            webOrderVo.setPayWay(r.getPayWay());
+            webOrderVo.setPayWayName("微信支付");
+            webOrderVo.setPayTypeName(PayType.getPayTypeName(r.getPayType()));
+            webOrderVo.setPredictStartTime(r.getStartTime());
+            webOrderVo.setPredictEndTime(r.getEndTime());
+            webOrderVo.setRemark(r.getRemark());
+            webOrderVo.setOrderMobile(r.getOrderMobile());
+            if(r.getPayTime()!=null){
+                webOrderVo.setPaySuccessTime(r.getPayTime());
+                webOrderVo.setPayTime(r.getPayTime());
+            }
+            final RoomAndHotelRegisterDto roomAndHotelRegisterDto = getRoomAndHotelRegister(r.getId());
+            final GuestRoom guestRoom = roomAndHotelRegisterDto.getGuestRoom();
+            if(guestRoom == null){
+                return webOrderVo;
+            }
+            webOrderVo.setRoomName(guestRoom.getRoomName());
+            webOrderVo.setRoomNum(guestRoom.getRoomNum());
+            webOrderVo.setStoreId(guestRoom.getStoreId());
+            webOrderVo.setStoreName(guestRoom.getStoreName());
+            webOrderVo.setGuestRoomId(guestRoom.getId());
+            final HotelRegister hotelRegister = roomAndHotelRegisterDto.getHotelRegister();
+            if(hotelRegister == null){
+                return webOrderVo;
+            }
+            webOrderVo.setActualStartTime(hotelRegister.getStartTime());
+            webOrderVo.setActualEndTime(hotelRegister.getEndTime());
+            webOrderVo.setRegisterStatus(hotelRegister.getRegisterStatus());
+            webOrderVo.setRegisterStatusString(CheckType.getCheckTypeName(hotelRegister.getRegisterStatus().intValue()));
+            webOrderVo.setHotelRegisterId(hotelRegister.getId());
+            return webOrderVo;
+        }).collect(Collectors.toList());
+    }
+
     private RoomAndHotelRegisterDto getRoomAndHotelRegister(Integer orderId){
         RoomAndHotelRegisterDto roomAndHotelRegisterDto = new RoomAndHotelRegisterDto();
         QueryWrapper<HotelRegister> queueWrapper = new QueryWrapper<>();
         queueWrapper.eq("order_id",orderId);
         final HotelRegister hotelRegister = hotelRegisterService.getOne(queueWrapper);
-        roomAndHotelRegisterDto.setHotelRegister(hotelRegister);
-        final GuestRoom guestRoom = guestRoomService.getById(hotelRegister.getGuestRoomId());
-        roomAndHotelRegisterDto.setGuestRoom(guestRoom);
+        if(hotelRegister != null){
+            roomAndHotelRegisterDto.setHotelRegister(hotelRegister);
+            final GuestRoom guestRoom = guestRoomService.getById(hotelRegister.getGuestRoomId());
+            roomAndHotelRegisterDto.setGuestRoom(guestRoom);
+        }
         return roomAndHotelRegisterDto;
     }
 
@@ -119,7 +200,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
     }
 
     public void  cancel(OrderRequest orderRequest){
-        final RoomAndHotelRegisterDto roomAndHotelRegister = getRoomAndHotelRegister(orderRequest.getId());
+        final RoomAndHotelRegisterDto roomAndHotelRegister = getRoomAndHotelRegister(orderRequest.getOrderId());
         GuestRoom guestRoom = new GuestRoom();
         guestRoom.setId(roomAndHotelRegister.getGuestRoom().getId());
         guestRoom.setRoomStatus(0);//如果取消，那么不管付钱还是没付钱，都把库存改为为占用
@@ -127,7 +208,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
         //添加更新取消原因,通过按钮点击的一定是手动取消
         TOrder tOrder = new TOrder();
         tOrder.setCancelType(2);
-        tOrder.setId(orderRequest.getId());
+        tOrder.setId(orderRequest.getOrderId());
         this.updateById(tOrder);
         //如果取消的时候，该人已付款，那么需要退款
         //todo
@@ -155,23 +236,84 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
         order.setOrderNum(orderNum);
         order.setOrderName(orderRequest.getOrderName());
         order.setOrderMobile(orderRequest.getOrderMobile());
-        order.setStartTime(orderRequest.getStartTime());
-        order.setEndTime(orderRequest.getEndTime());
+        order.setStartTime(orderRequest.getPredictStartTime());
+        order.setEndTime(orderRequest.getPredictEndTime());
         order.setRemark(orderRequest.getRemark());
         order.setTotalAmount(orderRequest.getTotalAmount());
         order.setDiscountAmount(0);
         order.setCreateTime(new Date());
-        order.setUid("23446435fdasgdsfsafdsa");
+        order.setUid(HeaderContext.getHeaders().getOpenId());
+        order.setPayType(PayType.ONLINE.getCode());
         final boolean saveResult = this.save(order);
 
         HotelRegisterRequest hotelRegisterRequest = new HotelRegisterRequest();
         hotelRegisterRequest.setGuestRoomId(orderRequest.getGuestRoomId());
-        hotelRegisterRequest.setStartTime(orderRequest.getStartTime());
-        hotelRegisterRequest.setEndTime(orderRequest.getEndTime());
+        hotelRegisterRequest.setActualStartTime(orderRequest.getActualStartTime());
+        hotelRegisterRequest.setActualEndTime(orderRequest.getActualEndTime());
         hotelRegisterRequest.setRemark(orderRequest.getRemark());
         hotelRegisterRequest.setOrderNum(orderNum);
         hotelRegisterRequest.setOrderId(order.getId());
-        hotelRegisterService.saveHotelRegister(hotelRegisterRequest);
+        hotelRegisterService.saveHotelRegister(hotelRegisterRequest, CheckType.UNCHECK.getCode());
+        return saveResult;
+    }
+
+    public boolean webCreate(OrderRequest orderRequest){
+        log.info("OrderServiceImpl, webCreate: {}", JSON.toJSONString(orderRequest));
+
+        final String orderNum = generateOrderNum();
+        TOrder order = new TOrder();
+        order.setOrderNum(orderNum);
+        order.setOrderName(orderRequest.getOrderName());
+        order.setOrderMobile(orderRequest.getOrderMobile());
+        order.setStartTime(orderRequest.getPredictStartTime());
+        order.setEndTime(orderRequest.getPredictEndTime());
+        order.setRemark(orderRequest.getRemark());
+        order.setTotalAmount(orderRequest.getTotalAmount());
+        order.setDiscountAmount(0);
+        order.setCreateTime(new Date());
+        order.setPayType(PayType.OFFLINE.getCode());
+        order.setUid("admin");
+        final boolean saveResult = this.save(order);
+
+        HotelRegisterRequest hotelRegisterRequest = new HotelRegisterRequest();
+        hotelRegisterRequest.setGuestRoomId(orderRequest.getGuestRoomId());
+        hotelRegisterRequest.setRemark(orderRequest.getRemark());
+        hotelRegisterRequest.setOrderNum(orderNum);
+        hotelRegisterRequest.setOrderId(order.getId());
+        hotelRegisterService.saveHotelRegister(hotelRegisterRequest,CheckType.UNCHECK.getCode());
+        return saveResult;
+    }
+
+    public boolean webUpdate(OrderRequest orderRequest){
+        log.info("OrderServiceImpl, webUpdate: {}", JSON.toJSONString(orderRequest));
+
+        final String orderNum = generateOrderNum();
+        TOrder order = new TOrder();
+        order.setOrderNum(orderNum);
+        order.setOrderName(orderRequest.getOrderName());
+        order.setOrderMobile(orderRequest.getOrderMobile());
+        order.setStartTime(orderRequest.getPredictStartTime());
+        order.setEndTime(orderRequest.getPredictEndTime());
+        order.setRemark(orderRequest.getRemark());
+        order.setTotalAmount(orderRequest.getTotalAmount());
+        order.setDiscountAmount(0);
+        order.setCreateTime(new Date());
+        order.setPayType(PayType.OFFLINE.getCode());
+        order.setUid("admin");
+        order.setId(orderRequest.getOrderId());
+        final boolean saveResult = this.updateById(order);
+
+        HotelRegister hotelRegister = new HotelRegister();
+        hotelRegister.setGuestRoomId(orderRequest.getGuestRoomId());
+        hotelRegister.setRemark(orderRequest.getRemark());
+        hotelRegister.setOrderNum(orderNum);
+        hotelRegister.setOrderId(order.getId());
+        if(orderRequest.getHotelRegisterId() == null){
+            hotelRegisterService.getBaseMapper().insert(hotelRegister);
+        }else{
+            hotelRegister.setId(orderRequest.getHotelRegisterId());
+            hotelRegisterService.getBaseMapper().updateById(hotelRegister);
+        }
         return saveResult;
     }
 
