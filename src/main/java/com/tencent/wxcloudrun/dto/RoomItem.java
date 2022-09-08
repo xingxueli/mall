@@ -2,12 +2,14 @@ package com.tencent.wxcloudrun.dto;
 
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 import java.util.Date;
 import java.util.List;
 
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class RoomItem {
     private Integer spuId;//roomId
     private Integer storeId;//roomId
