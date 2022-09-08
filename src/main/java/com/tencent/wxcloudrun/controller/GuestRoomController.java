@@ -3,6 +3,7 @@ package com.tencent.wxcloudrun.controller;
 
 import com.google.common.base.Preconditions;
 import com.tencent.wxcloudrun.config.ApiResponse;
+import com.tencent.wxcloudrun.dto.RoomItem;
 import com.tencent.wxcloudrun.dto.RoomRequest;
 import com.tencent.wxcloudrun.dto.RoomResponse;
 import com.tencent.wxcloudrun.enums.StoreEnum;
@@ -36,6 +37,14 @@ public class GuestRoomController {
         }
         final RoomResponse roomList = guestRoomService.getRoomList(roomRequest);
         return ApiResponse.ok(roomList);
+    }
+
+    @PostMapping(value = "/detail")
+    ApiResponse detail(@RequestBody RoomRequest roomRequest) {
+        logger.info("GuestRoomController detail");
+        Preconditions.checkNotNull(roomRequest.getSpuId());
+        final RoomItem roomItem = guestRoomService.getRoomDetail(roomRequest);
+        return ApiResponse.ok(roomItem);
     }
 
     /**

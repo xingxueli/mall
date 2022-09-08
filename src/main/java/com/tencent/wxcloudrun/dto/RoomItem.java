@@ -23,9 +23,20 @@ public class RoomItem {
     private String roomStatusString;
     private String roomShelvesString;
     private String roomNum;
+//    private String reserveText;//预定文案
 
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
     private Date createTime;
 
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
+    private Date reserveTime;//预定实际 即 订单的创建时间
+
+    @JsonFormat(pattern="yyyy-MM-dd",timezone="GMT+8")
+    private Date startDate;//订单里边的时间
+
+    @JsonFormat(pattern="yyyy-MM-dd",timezone="GMT+8")
+    private Date endDate;//订单里边的时间
+
     private List<String> tags;
+    private List<String> images;
 }

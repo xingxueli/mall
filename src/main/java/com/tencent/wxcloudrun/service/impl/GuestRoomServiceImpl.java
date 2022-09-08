@@ -5,12 +5,18 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tencent.wxcloudrun.dao.GuestRoomMapper;
+import com.tencent.wxcloudrun.dao.HotelRegisterMapper;
 import com.tencent.wxcloudrun.dto.*;
 import com.tencent.wxcloudrun.enums.OrderStatusEnum;
 import com.tencent.wxcloudrun.enums.RoomType;
 import com.tencent.wxcloudrun.model.GuestRoom;
+import com.tencent.wxcloudrun.model.HotelRegister;
+import com.tencent.wxcloudrun.model.TOrder;
 import com.tencent.wxcloudrun.service.GuestRoomService;
+import com.tencent.wxcloudrun.service.HotelRegisterService;
+import com.tencent.wxcloudrun.service.OrderService;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -19,6 +25,12 @@ import java.util.stream.Collectors;
 
 @Service
 public class GuestRoomServiceImpl extends ServiceImpl<GuestRoomMapper, GuestRoom> implements GuestRoomService {
+
+    @Autowired
+    OrderService orderService;
+
+    @Autowired
+    HotelRegisterMapper hotelRegisterMapper;
 
     public RoomResponse getRoomList(RoomRequest roomRequest){
         RoomResponse roomResponse = new RoomResponse();
@@ -52,6 +64,9 @@ public class GuestRoomServiceImpl extends ServiceImpl<GuestRoomMapper, GuestRoom
             roomItem.setPrice(Integer.parseInt(r.getRoomPrice()));
             roomItem.setOriginPrice(Integer.parseInt(r.getRoomOriginPrice()));
             roomItem.setThumb(r.getImageUrl());
+            List<String> images = new ArrayList<>();
+            images.add(r.getImageUrl());
+            roomItem.setImages(images);
             roomItem.setTitle(r.getRoomName());
             roomItem.setStoreId(r.getStoreId());
             roomItem.setRoomStatus(r.getRoomStatus());
@@ -76,6 +91,29 @@ public class GuestRoomServiceImpl extends ServiceImpl<GuestRoomMapper, GuestRoom
             }
             return roomItem;
         }).collect(Collectors.toList());
+    }
+
+    public RoomItem getRoomDetail(RoomRequest roomRequest){
+        List<RoomItem> roomItems = new ArrayList<>();
+        RoomItem roomItem = new RoomItem();
+
+        final GuestRoom guestRoom = this.getById(roomRequest.getSpuId());
+        List<GuestRoom> guestRooms = new ArrayList<>();
+        guestRooms.add(guestRoom);
+        roomItems = transform(guestRooms);
+
+        final RoomItem result = roomItems.get(0);
+
+        final HotelRegister hotelRegister = hotelRegisterMapper.getLatestOrderByRoomId(roomRequest.getSpuId());
+        if(hotelRegister != null){
+            final TOrder tOrder = orderService.getById(hotelRegister.getOrderId());
+            if(tOrder != null){
+                result.setReserveTime(tOrder.getCreateTime());
+                result.setStartDate(tOrder.getStartTime());
+                result.setEndDate(tOrder.getEndTime());
+            }
+        }
+        return result;
     }
 
 }
