@@ -4,6 +4,9 @@ import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.github.binarywang.wxpay.bean.order.WxPayMpOrderResult;
+import com.github.binarywang.wxpay.bean.request.WxPayUnifiedOrderRequest;
+import com.github.binarywang.wxpay.exception.WxPayException;
 import com.github.binarywang.wxpay.service.WxPayService;
 import com.tencent.wxcloudrun.Intercepter.HeaderContext;
 import com.tencent.wxcloudrun.dao.OrderMapper;
@@ -18,10 +21,14 @@ import com.tencent.wxcloudrun.service.GuestRoomService;
 import com.tencent.wxcloudrun.service.HotelRegisterService;
 import com.tencent.wxcloudrun.service.OrderService;
 import com.tencent.wxcloudrun.utils.DateUtils;
+import com.tencent.wxcloudrun.utils.IpUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
@@ -215,21 +222,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
 
     }
 
-    public boolean create(OrderRequest orderRequest){
+    public AppletOrderResponse create(OrderRequest orderRequest, HttpServletRequest request){
         log.info("OrderServiceImpl, create: {}", JSON.toJSONString(orderRequest));
-
-//        // 调用支付接口
-//        WxPayMpOrderResult result = null;
-//        try {
-//            WxPayUnifiedOrderRequest orderRequest = new WxPayUnifiedOrderRequest();
-//            orderRequest.setOutTradeNo(order.getOrderSn());
-//            orderRequest.setTotalFee(order.getPrice().multiply(new BigDecimal(100)).intValue());
-//            orderRequest.setSpbillCreateIp(IpUtil.getIpAddr(request));
-//            orderRequest.setOpenid(wxuser.getOpenId());
-//            result = wxPayService.createOrder(orderRequest);
-//        } catch (WxPayException e) {
-//            logger.info("WxPayException={}",e);
-//        }
 
         final String orderNum = generateOrderNum();
         TOrder order = new TOrder();
@@ -254,7 +248,34 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
         hotelRegisterRequest.setOrderNum(orderNum);
         hotelRegisterRequest.setOrderId(order.getId());
         hotelRegisterService.saveHotelRegister(hotelRegisterRequest, CheckType.UNCHECK.getCode());
-        return saveResult;
+
+
+        // 调用支付接口
+        WxPayMpOrderResult result = null;
+        try {
+            WxPayUnifiedOrderRequest wxPayUnifiedOrderRequest = new WxPayUnifiedOrderRequest();
+            wxPayUnifiedOrderRequest.setOutTradeNo(orderNum);
+            wxPayUnifiedOrderRequest.setTotalFee(new BigDecimal(orderRequest.getTotalAmount()).multiply(new BigDecimal(100)).intValue());
+            wxPayUnifiedOrderRequest.setSpbillCreateIp(IpUtil.getIpAddr(request));
+            wxPayUnifiedOrderRequest.setOpenid(HeaderContext.getHeaders().getOpenId());
+            result = wxPayService.createOrder(wxPayUnifiedOrderRequest);
+        } catch (WxPayException e) {
+            log.info("WxPayException={}",e);
+        }
+
+        AppletOrderResponse appletOrderResponse = new AppletOrderResponse();
+        PayInfo payInfo = new PayInfo();
+        if(result != null){
+            payInfo.setPaySign(result.getPaySign());
+            payInfo.setSignType(result.getSignType());
+            payInfo.setTimeStamp(result.getTimeStamp());
+            payInfo.setPackageName(result.getPackageValue());
+            payInfo.setNonceStr(result.getNonceStr());
+        }
+        appletOrderResponse.setPayInfo(payInfo);
+        appletOrderResponse.setTradeNo(orderNum);
+        appletOrderResponse.setTransactionId(orderNum);
+        return appletOrderResponse;
     }
 
     public boolean webCreate(OrderRequest orderRequest){

@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -55,7 +56,7 @@ public class OrderController {
     }
 
     @PostMapping(value = "/create")
-    ApiResponse create(@RequestBody AppletOrderRequest appletOrderRequest) {
+    ApiResponse create(@RequestBody AppletOrderRequest appletOrderRequest, HttpServletRequest request) {
 
         final List<AppletOrderDetail> goodsRequestList = appletOrderRequest.getGoodsRequestList();
         final List<StoreInfo> storeInfoList = appletOrderRequest.getStoreInfoList();
@@ -82,12 +83,8 @@ public class OrderController {
         Preconditions.checkNotNull(orderRequest.getPayType());
         Preconditions.checkNotNull(orderRequest.getPayWay());
 
-        final boolean saveResult = orderService.create(orderRequest);
-        if(saveResult){
-            return ApiResponse.ok(0);
-        }else {
-            return ApiResponse.error("处理错误，请联系管理员，管理员电话13888888888");
-        }
+        final AppletOrderResponse appletOrderResponse = orderService.create(orderRequest,request);
+        return ApiResponse.ok(appletOrderResponse);
     }
 
     @PostMapping(value = "/webCreate")
