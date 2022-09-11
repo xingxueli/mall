@@ -9,7 +9,6 @@ import java.util.Date;
 import java.util.List;
 
 @Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class RoomItem {
     private Integer spuId;//roomId
     private Integer storeId;//roomId
@@ -30,7 +29,7 @@ public class RoomItem {
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
     private Date createTime;
 
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
+    @JsonFormat(pattern="yyyy-MM-dd",timezone="GMT+8")
     private Date reserveTime;//预定实际 即 订单的创建时间
 
     @JsonFormat(pattern="yyyy-MM-dd",timezone="GMT+8")

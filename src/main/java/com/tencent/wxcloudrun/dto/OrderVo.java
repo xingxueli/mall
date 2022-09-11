@@ -6,25 +6,25 @@ import java.util.List;
 
 @Data
 public class OrderVo {
-    private String saasId = "88888888";
-    private String storeId="1000";
-    private String storeName="红兴农家院";
-    private String uid="88888888205468";
-    private String orderId="354021735982432279";
-    private String orderNo="354021731671873099";
+    private String saasId;
+    private String storeId;
+    private String storeName;
+    private String uid;
+    private String orderId;
+    private String orderNo;
     private Integer orderStatus=5;
-    private String totalAmount="10010";
-    private String paymentAmount="20";
-    private String discountAmount="9990";
-    private String remark="买电风扇送电池吗";
+    private String totalAmount;
+    private String paymentAmount;
+    private String discountAmount;
+    private String remark;
     private Integer cancelType=0;
     private Integer cancelReasonType=0;
-    private String cancelReason="";
-    private String createTime="1600350829288";
+    private String cancelReason;
+    private String createTime;
     private List<OrderItemVo> orderItemVOs;
     private PaymentVo paymentVO;
     private List<ButtonVo> buttonVOs;
-    private String autoCancelTime="1823652629288";
-    private String orderStatusName="待付款";
-    private String orderSatusRemark="需支付￥0.20";
+    private String autoCancelTime;
+    private String orderStatusName;
+    private String orderSatusRemark;
 }

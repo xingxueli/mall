@@ -55,7 +55,22 @@ public class OrderController {
     }
 
     @PostMapping(value = "/create")
-    ApiResponse create(@RequestBody OrderRequest orderRequest) {
+    ApiResponse create(@RequestBody AppletOrderRequest appletOrderRequest) {
+
+        final List<AppletOrderDetail> goodsRequestList = appletOrderRequest.getGoodsRequestList();
+        final List<StoreInfo> storeInfoList = appletOrderRequest.getStoreInfoList();
+        final AppletOrderDetail appletOrderDetail = goodsRequestList.get(0);
+        final StoreInfo storeInfo = storeInfoList.get(0);
+        OrderRequest orderRequest = new OrderRequest();
+        orderRequest.setOrderName(appletOrderDetail.getOrderName());
+        orderRequest.setOrderMobile(appletOrderDetail.getOrderMobile());
+        orderRequest.setPredictStartTime(appletOrderDetail.getStartDate());
+        orderRequest.setPredictEndTime(appletOrderDetail.getEndDate());
+        orderRequest.setGuestRoomId(appletOrderDetail.getGuestRoomId());
+        orderRequest.setRemark(storeInfo.getRemark());
+        orderRequest.setPayType(appletOrderRequest.getPayType());
+        orderRequest.setPayWay(appletOrderRequest.getPayWay());
+        orderRequest.setTotalAmount(appletOrderRequest.getTotalAmount());
 
         Preconditions.checkNotNull(orderRequest.getOrderName());
         Preconditions.checkNotNull(orderRequest.getOrderMobile());
