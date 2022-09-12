@@ -135,4 +135,10 @@ public class OrderController {
         orderService.cancel(request);
         return ApiResponse.ok();
     }
+
+    @GetMapping(value = "/detail")
+    ApiResponse detail(@RequestParam String orderNum) {
+        Preconditions.checkNotNull(orderNum);
+        return ApiResponse.ok(orderService.detail(orderNum));
+    }
 }

@@ -16,4 +16,5 @@ public interface OrderService extends IService<TOrder>{
     WebOrderResponse getWebOrderList(OrderRequest orderRequest);
     boolean webCreate(OrderRequest orderRequest);
     boolean webUpdate(OrderRequest orderRequest);
+    OrderVo detail(String orderNum);
 }

@@ -12,6 +12,7 @@ import com.tencent.wxcloudrun.Intercepter.HeaderContext;
 import com.tencent.wxcloudrun.dao.OrderMapper;
 import com.tencent.wxcloudrun.dto.*;
 import com.tencent.wxcloudrun.enums.CheckType;
+import com.tencent.wxcloudrun.enums.OrderButtonTypes;
 import com.tencent.wxcloudrun.enums.OrderStatusEnum;
 import com.tencent.wxcloudrun.enums.PayType;
 import com.tencent.wxcloudrun.model.GuestRoom;
@@ -23,6 +24,7 @@ import com.tencent.wxcloudrun.service.OrderService;
 import com.tencent.wxcloudrun.utils.DateUtils;
 import com.tencent.wxcloudrun.utils.IpUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.list.AbstractLinkedList;
 import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -84,6 +86,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
             orderVo.setTotalAmount(String.valueOf(r.getTotalAmount()));
             orderVo.setOrderStatusName(OrderStatusEnum.getOrderStatusName(r.getOrderStatus()));
             orderVo.setOrderSatusRemark("");
+            buildButtonVos(orderVo,r);
 
             List<OrderItemVo> orderItemVos = new ArrayList<>();
             OrderItemVo orderItemVo = new OrderItemVo();
@@ -120,6 +123,37 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
             orderVo.setPaymentVO(paymentVo);
             return orderVo;
         }).collect(Collectors.toList());
+    }
+
+    private void buildButtonVos(OrderVo orderVo,TOrder tOrder){
+        List<ButtonVo> list = new ArrayList<>();
+        if(tOrder.getOrderStatus().intValue() == OrderStatusEnum.TO_BE_PAID.getCode()){
+            ButtonVo buttonVo1 = new ButtonVo();
+            buttonVo1.setPrimary(true);
+            buttonVo1.setName(OrderButtonTypes.PAY.getName());
+            buttonVo1.setType(OrderButtonTypes.PAY.getCode());
+            list.add(buttonVo1);
+            ButtonVo buttonVo2 = new ButtonVo();
+            buttonVo2.setPrimary(false);
+            buttonVo2.setName(OrderButtonTypes.CANCEL.getName());
+            buttonVo2.setType(OrderButtonTypes.CANCEL.getCode());
+            list.add(buttonVo2);
+            orderVo.setButtonVOs(list);
+        }else if(tOrder.getOrderStatus().intValue() == OrderStatusEnum.PAID_AND_CHECK_IN.getCode()){
+            ButtonVo buttonVo2 = new ButtonVo();
+            buttonVo2.setPrimary(false);
+            buttonVo2.setName(OrderButtonTypes.CANCEL.getName());
+            buttonVo2.setType(OrderButtonTypes.CANCEL.getCode());
+            list.add(buttonVo2);
+            orderVo.setButtonVOs(list);
+        }else{
+            ButtonVo buttonVo2 = new ButtonVo();
+            buttonVo2.setPrimary(false);
+            buttonVo2.setName(OrderButtonTypes.COMMENT.getName());
+            buttonVo2.setType(OrderButtonTypes.COMMENT.getCode());
+            list.add(buttonVo2);
+            orderVo.setButtonVOs(list);
+        }
     }
 
     public WebOrderResponse  getWebOrderList(OrderRequest orderRequest){
@@ -345,6 +379,19 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
 //        order.setPayTime();
 //        order.setOrderStatus(OrderStatusEnum.PAID_AND_CHECK_IN.getCode());
         this.updateById(order);
+    }
+
+    public OrderVo detail(String orderNum){
+        QueryWrapper<TOrder> queueWrapper = new QueryWrapper<>();
+        queueWrapper.eq("order_num", orderNum);
+        final TOrder tOrder = this.getOne(queueWrapper);
+        if(tOrder == null){
+            return null;
+        }
+        List<TOrder> tOrders = new ArrayList<>();
+        tOrders.add(tOrder);
+        final List<OrderVo> transform = transform(tOrders);
+        return transform.get(0);
     }
 
     private String generateOrderNum(){
