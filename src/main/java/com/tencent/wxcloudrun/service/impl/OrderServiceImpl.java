@@ -49,8 +49,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
     @Autowired
     GuestRoomService guestRoomService;
 
-    final ThreadLocalRandom current = ThreadLocalRandom.current();
-
     @Autowired
     WxPayService wxPayService;
 
@@ -88,6 +86,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
             orderVo.setOrderSatusRemark("");
             orderVo.setPaymentAmount(orderVo.getTotalAmount());
             orderVo.setRemark(r.getRemark());
+            orderVo.setOrderName(r.getOrderName());
+            orderVo.setOrderMobile(r.getOrderMobile());
+            orderVo.setPredictEndTime(r.getEndTime());
+            orderVo.setPredictStartTime(r.getStartTime());
             buildButtonVos(orderVo,r);
 
             List<OrderItemVo> orderItemVos = new ArrayList<>();
@@ -98,7 +100,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
                 return orderVo;
             }
             orderItemVo.setId(String.valueOf(hotelRegister.getId()));
-
+            orderItemVo.setStartDate(hotelRegister.getStartTime());
+            orderItemVo.setEndDate(hotelRegister.getEndTime());
             final GuestRoom guestRoom = roomAndHotelRegisterDto.getGuestRoom();
             if(guestRoom == null){
                 return orderVo;
@@ -276,6 +279,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
         order.setCreateTime(new Date());
         order.setUid(HeaderContext.getHeaders().getOpenId());
         order.setPayType(PayType.ONLINE.getCode());
+        order.setDays(orderRequest.getQuantity());
         final boolean saveResult = this.save(order);
 
         HotelRegisterRequest hotelRegisterRequest = new HotelRegisterRequest();
@@ -402,7 +406,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
 
     private String generateOrderNum(){
         final String s = DateUtils.formatOrderDateTime(LocalDateTime.now());
-        final int i = current.nextInt(100000, 999999);
+        final int i = ThreadLocalRandom.current().nextInt(100000, 999999);
         return s.concat(String.valueOf(i));
     }
 }

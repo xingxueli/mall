@@ -1,7 +1,9 @@
 package com.tencent.wxcloudrun.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -27,4 +29,12 @@ public class OrderVo {
     private String autoCancelTime;
     private String orderStatusName;
     private String orderSatusRemark;
+
+    private String orderName;
+    private String orderMobile;
+
+    @JsonFormat(pattern="yyyy-MM-dd",timezone="GMT+8")
+    private Date predictStartTime;
+    @JsonFormat(pattern="yyyy-MM-dd",timezone="GMT+8")
+    private Date predictEndTime;
 }

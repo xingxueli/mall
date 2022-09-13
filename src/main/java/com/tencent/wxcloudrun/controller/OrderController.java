@@ -72,6 +72,7 @@ public class OrderController {
         orderRequest.setPayType(appletOrderRequest.getPayType());
         orderRequest.setPayWay(appletOrderRequest.getPayWay());
         orderRequest.setTotalAmount(appletOrderRequest.getTotalAmount());
+        orderRequest.setQuantity(appletOrderDetail.getQuantity());
 
         Preconditions.checkNotNull(orderRequest.getOrderName());
         Preconditions.checkNotNull(orderRequest.getOrderMobile());
@@ -82,6 +83,7 @@ public class OrderController {
         Preconditions.checkNotNull(orderRequest.getTotalAmount());
         Preconditions.checkNotNull(orderRequest.getPayType());
         Preconditions.checkNotNull(orderRequest.getPayWay());
+        Preconditions.checkNotNull(orderRequest.getQuantity());
 
         final AppletOrderResponse appletOrderResponse = orderService.create(orderRequest,request);
         return ApiResponse.ok(appletOrderResponse);
