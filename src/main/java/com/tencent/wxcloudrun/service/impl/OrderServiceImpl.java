@@ -90,6 +90,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
             orderVo.setOrderMobile(r.getOrderMobile());
             orderVo.setPredictEndTime(r.getEndTime());
             orderVo.setPredictStartTime(r.getStartTime());
+            orderVo.setQuantity(r.getDays());
             buildButtonVos(orderVo,r);
 
             List<OrderItemVo> orderItemVos = new ArrayList<>();

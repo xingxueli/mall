@@ -32,6 +32,7 @@ public class OrderVo {
 
     private String orderName;
     private String orderMobile;
+    private Integer quantity;
 
     @JsonFormat(pattern="yyyy-MM-dd",timezone="GMT+8")
     private Date predictStartTime;
