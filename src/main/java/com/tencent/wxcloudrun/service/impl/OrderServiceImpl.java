@@ -314,6 +314,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
         appletOrderResponse.setTradeNo(orderNum);
         appletOrderResponse.setTransactionId(orderNum);
         appletOrderResponse.setChannel("wechat");
+        appletOrderResponse.setPayAmt(orderRequest.getTotalAmount());
         return appletOrderResponse;
     }
 

@@ -49,7 +49,7 @@ public class InterceptorConfig implements WebMvcConfigurer {
 //        // 解决中文乱码问题，相当于在Controller上的@RequestMapping中加了个属性produces = "application/json"
 //        mediaTypeList.add(MediaType.APPLICATION_JSON);
 //        converter.setSupportedMediaTypes(mediaTypeList);
-//        converters.add(converter);
+//        converters.add(0,converter);
 //    }
-//
+
 }
