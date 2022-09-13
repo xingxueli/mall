@@ -86,6 +86,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
             orderVo.setTotalAmount(String.valueOf(r.getTotalAmount()));
             orderVo.setOrderStatusName(OrderStatusEnum.getOrderStatusName(r.getOrderStatus()));
             orderVo.setOrderSatusRemark("");
+            orderVo.setPaymentAmount(orderVo.getTotalAmount());
+            orderVo.setRemark(r.getRemark());
             buildButtonVos(orderVo,r);
 
             List<OrderItemVo> orderItemVos = new ArrayList<>();
@@ -107,6 +109,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
             orderItemVo.setSkuId(String.valueOf(guestRoom.getId()));
             orderItemVo.setGoodsPictureUrl(guestRoom.getImageUrl());
             orderItemVo.setGoodsName(guestRoom.getRoomName());
+            orderVo.setStoreId(guestRoom.getStoreId());
+            orderVo.setStoreName(guestRoom.getStoreName());
 
             orderItemVos.add(orderItemVo);
             orderVo.setOrderItemVOs(orderItemVos);
@@ -309,6 +313,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
         appletOrderResponse.setPayInfo(payInfo);
         appletOrderResponse.setTradeNo(orderNum);
         appletOrderResponse.setTransactionId(orderNum);
+        appletOrderResponse.setChannel("wechat");
         return appletOrderResponse;
     }
 

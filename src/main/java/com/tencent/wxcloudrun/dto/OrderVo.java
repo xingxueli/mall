@@ -7,7 +7,7 @@ import java.util.List;
 @Data
 public class OrderVo {
     private String saasId;
-    private String storeId;
+    private Integer storeId;
     private String storeName;
     private String uid;
     private String orderId;
