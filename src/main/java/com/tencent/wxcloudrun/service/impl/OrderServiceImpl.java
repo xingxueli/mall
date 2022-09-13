@@ -25,6 +25,7 @@ import com.tencent.wxcloudrun.utils.DateUtils;
 import com.tencent.wxcloudrun.utils.IpUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.list.AbstractLinkedList;
+import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -266,31 +267,33 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
 
     public AppletOrderResponse create(OrderRequest orderRequest, HttpServletRequest request){
         log.info("OrderServiceImpl, create: {}", JSON.toJSONString(orderRequest));
+        String orderNum = orderRequest.getOrderNum();
+        if(StringUtils.isEmpty(orderRequest.getOrderNum())){//如果有订单编号，说明第一次创建完订单后未支付，走重新支付流程
+            orderNum = generateOrderNum();
+            TOrder order = new TOrder();
+            order.setOrderNum(orderNum);
+            order.setOrderName(orderRequest.getOrderName());
+            order.setOrderMobile(orderRequest.getOrderMobile());
+            order.setStartTime(orderRequest.getPredictStartTime());
+            order.setEndTime(orderRequest.getPredictEndTime());
+            order.setRemark(orderRequest.getRemark());
+            order.setTotalAmount(orderRequest.getTotalAmount());
+            order.setDiscountAmount(0);
+            order.setCreateTime(new Date());
+            order.setUid(HeaderContext.getHeaders().getOpenId());
+            order.setPayType(PayType.ONLINE.getCode());
+            order.setDays(orderRequest.getQuantity());
+            final boolean saveResult = this.save(order);
 
-        final String orderNum = generateOrderNum();
-        TOrder order = new TOrder();
-        order.setOrderNum(orderNum);
-        order.setOrderName(orderRequest.getOrderName());
-        order.setOrderMobile(orderRequest.getOrderMobile());
-        order.setStartTime(orderRequest.getPredictStartTime());
-        order.setEndTime(orderRequest.getPredictEndTime());
-        order.setRemark(orderRequest.getRemark());
-        order.setTotalAmount(orderRequest.getTotalAmount());
-        order.setDiscountAmount(0);
-        order.setCreateTime(new Date());
-        order.setUid(HeaderContext.getHeaders().getOpenId());
-        order.setPayType(PayType.ONLINE.getCode());
-        order.setDays(orderRequest.getQuantity());
-        final boolean saveResult = this.save(order);
-
-        HotelRegisterRequest hotelRegisterRequest = new HotelRegisterRequest();
-        hotelRegisterRequest.setGuestRoomId(orderRequest.getGuestRoomId());
-        hotelRegisterRequest.setActualStartTime(orderRequest.getActualStartTime());
-        hotelRegisterRequest.setActualEndTime(orderRequest.getActualEndTime());
-        hotelRegisterRequest.setRemark(orderRequest.getRemark());
-        hotelRegisterRequest.setOrderNum(orderNum);
-        hotelRegisterRequest.setOrderId(order.getId());
-        hotelRegisterService.saveHotelRegister(hotelRegisterRequest, CheckType.UNCHECK.getCode());
+            HotelRegisterRequest hotelRegisterRequest = new HotelRegisterRequest();
+            hotelRegisterRequest.setGuestRoomId(orderRequest.getGuestRoomId());
+            hotelRegisterRequest.setActualStartTime(orderRequest.getActualStartTime());
+            hotelRegisterRequest.setActualEndTime(orderRequest.getActualEndTime());
+            hotelRegisterRequest.setRemark(orderRequest.getRemark());
+            hotelRegisterRequest.setOrderNum(orderNum);
+            hotelRegisterRequest.setOrderId(order.getId());
+            hotelRegisterService.saveHotelRegister(hotelRegisterRequest, CheckType.UNCHECK.getCode());
+        }
 
 
         // 调用支付接口
