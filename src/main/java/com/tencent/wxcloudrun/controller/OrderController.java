@@ -73,6 +73,7 @@ public class OrderController {
         orderRequest.setPayWay(appletOrderRequest.getPayWay());
         orderRequest.setTotalAmount(appletOrderRequest.getTotalAmount());
         orderRequest.setQuantity(appletOrderDetail.getQuantity());
+        orderRequest.setOrderNum(appletOrderRequest.getOrderNum());
 
         Preconditions.checkNotNull(orderRequest.getOrderName());
         Preconditions.checkNotNull(orderRequest.getOrderMobile());
