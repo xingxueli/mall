@@ -33,6 +33,7 @@ public class TOrder implements Serializable {
 
   private Date createTime;//创建订单日期
   private Date payTime;//订单支付时间
+  private Date cancelTime;//订单取消时间
 
   private Date startTime;//预计入住时间
   private Date endTime;//预计退房时间

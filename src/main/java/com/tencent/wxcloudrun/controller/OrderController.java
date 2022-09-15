@@ -1,6 +1,9 @@
 package com.tencent.wxcloudrun.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.github.binarywang.wxpay.bean.notify.WxPayNotifyResponse;
+import com.github.binarywang.wxpay.bean.notify.WxPayOrderNotifyResult;
+import com.github.binarywang.wxpay.bean.notify.WxPayRefundNotifyResult;
 import com.github.binarywang.wxpay.bean.order.WxPayMpOrderResult;
 import com.github.binarywang.wxpay.bean.request.WxPayUnifiedOrderRequest;
 import com.github.binarywang.wxpay.exception.WxPayException;
@@ -28,7 +31,7 @@ public class OrderController {
     final OrderService orderService;
     final Logger logger;
 
-    public OrderController(@Autowired OrderService orderService,@Autowired WxPayService wxPayService) {
+    public OrderController(@Autowired OrderService orderService) {
         this.orderService = orderService;
         this.logger = LoggerFactory.getLogger(OrderController.class);
     }
@@ -134,7 +137,8 @@ public class OrderController {
 
 
     @PostMapping(value = "/cancel")
-    ApiResponse cancel(@RequestBody OrderRequest request) {
+    ApiResponse cancel(@RequestBody OrderRequest request) throws Exception {
+        Preconditions.checkNotNull(request.getOrderNum());
         orderService.cancel(request);
         return ApiResponse.ok();
     }
@@ -143,5 +147,17 @@ public class OrderController {
     ApiResponse detail(@RequestParam String orderNum) {
         Preconditions.checkNotNull(orderNum);
         return ApiResponse.ok(orderService.detail(orderNum));
+    }
+
+    @GetMapping(value = "/payNotify")
+    String payNotify(@RequestBody String xmlData) {
+        orderService.payNotify(xmlData);
+        return WxPayNotifyResponse.success("成功");
+    }
+
+    @GetMapping(value = "/refundNotify")
+    String refundNotify(@RequestBody String xmlData) {
+        orderService.refundNotify(xmlData);
+        return WxPayNotifyResponse.success("成功");
     }
 }

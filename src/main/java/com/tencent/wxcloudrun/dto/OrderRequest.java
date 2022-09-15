@@ -12,7 +12,7 @@ public class OrderRequest extends BaseRequest{
   private Integer hotelRegisterId;
 
   private String orderNum;
-  private String cancelReasonType;
+  private Integer cancelReasonType;
 
   private String orderName;//下单人名字
   private String orderMobile;

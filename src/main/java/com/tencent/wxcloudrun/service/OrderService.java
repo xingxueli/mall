@@ -11,10 +11,12 @@ public interface OrderService extends IService<TOrder>{
 
     OrderResponse  getOrderList(OrderRequest orderRequest);
     List<OrderStatusCount> orderStatusCount(Integer orderStatus);
-    void cancel(OrderRequest orderRequest);
+    void cancel(OrderRequest orderRequest) throws Exception;
     AppletOrderResponse create(OrderRequest orderRequest, HttpServletRequest request);
     WebOrderResponse getWebOrderList(OrderRequest orderRequest);
     boolean webCreate(OrderRequest orderRequest);
     boolean webUpdate(OrderRequest orderRequest);
     OrderVo detail(String orderNum);
+    void payNotify(String xmlData);
+    void refundNotify(String xmlData);
 }

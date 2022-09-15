@@ -4,8 +4,12 @@ import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.github.binarywang.wxpay.bean.notify.WxPayOrderNotifyResult;
+import com.github.binarywang.wxpay.bean.notify.WxPayRefundNotifyResult;
 import com.github.binarywang.wxpay.bean.order.WxPayMpOrderResult;
+import com.github.binarywang.wxpay.bean.request.WxPayRefundRequest;
 import com.github.binarywang.wxpay.bean.request.WxPayUnifiedOrderRequest;
+import com.github.binarywang.wxpay.bean.result.WxPayRefundResult;
 import com.github.binarywang.wxpay.exception.WxPayException;
 import com.github.binarywang.wxpay.service.WxPayService;
 import com.tencent.wxcloudrun.Intercepter.HeaderContext;
@@ -17,10 +21,12 @@ import com.tencent.wxcloudrun.enums.OrderStatusEnum;
 import com.tencent.wxcloudrun.enums.PayType;
 import com.tencent.wxcloudrun.model.GuestRoom;
 import com.tencent.wxcloudrun.model.HotelRegister;
+import com.tencent.wxcloudrun.model.PayLog;
 import com.tencent.wxcloudrun.model.TOrder;
 import com.tencent.wxcloudrun.service.GuestRoomService;
 import com.tencent.wxcloudrun.service.HotelRegisterService;
 import com.tencent.wxcloudrun.service.OrderService;
+import com.tencent.wxcloudrun.service.PayLogService;
 import com.tencent.wxcloudrun.utils.DateUtils;
 import com.tencent.wxcloudrun.utils.IpUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +58,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
 
     @Autowired
     WxPayService wxPayService;
+
+    @Autowired
+    PayLogService payLogService;
+
+    private static final String CALLBACK_ADDRESS = "https://springboot-krih-3055-4-1313299760.sh.run.tcloudbase.com";
 
     public OrderResponse  getOrderList(OrderRequest orderRequest){
         OrderResponse orderResponse = new OrderResponse();
@@ -249,20 +260,54 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
         return this.getBaseMapper().orderStatusCount();
     }
 
-    public void  cancel(OrderRequest orderRequest){
-        final RoomAndHotelRegisterDto roomAndHotelRegister = getRoomAndHotelRegister(orderRequest.getOrderId());
+    public void cancel(OrderRequest orderRequest) throws Exception {
+
+        final String orderNum = orderRequest.getOrderNum();
+        QueryWrapper<TOrder> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("order_num",orderRequest.getOrderNum());
+        final TOrder tOrder = this.getOne(queryWrapper);
+        if(tOrder == null){
+            throw new Exception("订单不存在");
+        }
+
+        Integer orderStatus = null;
+        //已支付去取消
+        //如果取消的时候，该人已付款未入住，那么需要自动退款，如果已付款已入住，则走商户退款
+        if(tOrder.getOrderStatus().intValue() == OrderStatusEnum.PAID_AND_CHECK_IN.getCode()){
+            WxPayRefundResult result = null;
+            try {
+                WxPayRefundRequest wxPayRefundRequest = new WxPayRefundRequest();
+                wxPayRefundRequest.setOutTradeNo(orderNum);
+                wxPayRefundRequest.setOutRefundNo("T".concat(orderNum));//退款单号
+                wxPayRefundRequest.setTotalFee(new BigDecimal(tOrder.getTotalAmount()).multiply(new BigDecimal(100)).intValue());
+                wxPayRefundRequest.setRefundFee(new BigDecimal(tOrder.getTotalAmount()).multiply(new BigDecimal(100)).intValue());
+                wxPayRefundRequest.setNotifyUrl(CALLBACK_ADDRESS.concat("/order/refundNotify"));
+                result = wxPayService.refund(wxPayRefundRequest);
+            } catch (WxPayException e) {
+                log.info("WxPayException={}",e);
+            }
+        }else{
+            //未支付去取消
+            orderRequest.setOrderStatus(OrderStatusEnum.CANCELED_UNPIAD.getCode());
+            doCancel(tOrder,orderRequest);
+        }
+
+    }
+
+    private void doCancel(TOrder tOrder,OrderRequest orderRequest){
+        final RoomAndHotelRegisterDto roomAndHotelRegister = getRoomAndHotelRegister(tOrder.getId());
         GuestRoom guestRoom = new GuestRoom();
         guestRoom.setId(roomAndHotelRegister.getGuestRoom().getId());
-        guestRoom.setRoomStatus(0);//如果取消，那么不管付钱还是没付钱，都把库存改为为占用
+        guestRoom.setRoomStatus(0);//如果取消，那么不管付钱还是没付钱，都把库存改为未占用
         guestRoomService.updateById(guestRoom);
         //添加更新取消原因,通过按钮点击的一定是手动取消
-        TOrder tOrder = new TOrder();
-        tOrder.setCancelType(2);
-        tOrder.setId(orderRequest.getOrderId());
-        this.updateById(tOrder);
-        //如果取消的时候，该人已付款，那么需要退款
-        //todo
-
+        TOrder condition = new TOrder();
+        condition.setCancelType(2);
+        condition.setCancelReasonType(orderRequest.getCancelReasonType());
+        condition.setCancelTime(new Date());
+        condition.setId(tOrder.getId());
+        condition.setOrderStatus(orderRequest.getOrderStatus());
+        this.updateById(condition);
     }
 
     public AppletOrderResponse create(OrderRequest orderRequest, HttpServletRequest request){
@@ -304,6 +349,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
             wxPayUnifiedOrderRequest.setTotalFee(new BigDecimal(orderRequest.getTotalAmount()).multiply(new BigDecimal(100)).intValue());
             wxPayUnifiedOrderRequest.setSpbillCreateIp(IpUtil.getIpAddr(request));
             wxPayUnifiedOrderRequest.setOpenid(HeaderContext.getHeaders().getOpenId());
+            wxPayUnifiedOrderRequest.setBody("房间描述");
+            wxPayUnifiedOrderRequest.setNotifyUrl(CALLBACK_ADDRESS.concat("/order/payNotify"));
             result = wxPayService.createOrder(wxPayUnifiedOrderRequest);
         } catch (WxPayException e) {
             log.info("WxPayException={}",e);
@@ -412,5 +459,88 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
         final String s = DateUtils.formatOrderDateTime(LocalDateTime.now());
         final int i = ThreadLocalRandom.current().nextInt(100000, 999999);
         return s.concat(String.valueOf(i));
+    }
+
+    /**
+     * 注意：同样的通知可能会多次发送给商户系统。商户系统必须能够正确处理重复的通知。
+     *
+     * 推荐的做法是，当收到通知进行处理时，首先检查对应业务数据的状态，判断该通知是否已经处理过，如果没有处理过再进行处理，如果处理过直接返回结果成功。在对业务数据进行状态检查和处理之前，要采用数据锁进行并发控制，以避免服务重入造成的数据混乱。
+     * @param xmlData
+     */
+    @Override
+    public void payNotify(String xmlData){
+        WxPayOrderNotifyResult orderNotifyResult = null;
+        try {
+            orderNotifyResult = wxPayService.parseOrderNotifyResult(xmlData);
+        } catch (WxPayException e) {
+            e.printStackTrace();
+        }
+        if(orderNotifyResult != null){
+            final String orderNum = orderNotifyResult.getOutTradeNo();
+            QueryWrapper<TOrder> queueWrapper = new QueryWrapper<>();
+            queueWrapper.eq("order_num", orderNum);
+            final TOrder tOrder = this.getOne(queueWrapper);
+            if(tOrder == null){
+                return;
+            }
+            //如果不是待支付，不继续
+            if(tOrder.getOrderStatus().intValue() != OrderStatusEnum.TO_BE_PAID.getCode()){
+                return;
+            }
+            //如果是待支付，则更新为已支付待入住
+            TOrder condition = new TOrder();
+            condition.setId(tOrder.getId());
+            condition.setOrderStatus(OrderStatusEnum.PAID_AND_CHECK_IN.getCode());
+            condition.setPayTime(new Date());
+            this.updateById(condition);
+            //插入支付记录表
+            PayLog payLog = new PayLog();
+            payLog.setOrderId(tOrder.getId());
+            payLog.setCreateTime(new Date());
+            payLog.setPrice(orderNotifyResult.getTotalFee());
+            payLog.setTotalFee(orderNotifyResult.getTotalFee());
+            payLog.setResultCode(orderNotifyResult.getResultCode());
+            payLog.setReturnCode(orderNotifyResult.getReturnCode());
+            payLog.setResultStatus(1);
+            payLog.setTag(" ");
+            payLog.setTransactionId(orderNotifyResult.getTransactionId());
+            payLog.setReturnData(orderNotifyResult.getReturnMsg());
+            payLog.setOpenid(orderNotifyResult.getOpenid());
+            payLogService.getBaseMapper().insert(payLog);
+        }
+    }
+
+    /**
+     * 注意：同样的通知可能会多次发送给商户系统。商户系统必须能够正确处理重复的通知。
+     *
+     * 推荐的做法是，当收到通知进行处理时，首先检查对应业务数据的状态，判断该通知是否已经处理过，如果没有处理过再进行处理，如果处理过直接返回结果成功。在对业务数据进行状态检查和处理之前，要采用数据锁进行并发控制，以避免服务重入造成的数据混乱。
+     * @param xmlData
+     */
+    @Override
+    public void refundNotify(String xmlData){
+        WxPayRefundNotifyResult refundNotifyResult = null;
+        try {
+            refundNotifyResult = wxPayService.parseRefundNotifyResult(xmlData);
+        } catch (WxPayException e) {
+            e.printStackTrace();
+        }
+        if(refundNotifyResult != null){
+            final WxPayRefundNotifyResult.ReqInfo reqInfo = refundNotifyResult.getReqInfo();
+            final String orderNum = reqInfo.getOutTradeNo();
+            QueryWrapper<TOrder> queueWrapper = new QueryWrapper<>();
+            queueWrapper.eq("order_num", orderNum);
+            final TOrder tOrder = this.getOne(queueWrapper);
+            if(tOrder == null){
+                return;
+            }
+            //如果不是已支付待入住，不继续
+            if(tOrder.getOrderStatus().intValue() != OrderStatusEnum.PAID_AND_CHECK_IN.getCode()){
+                return;
+            }
+            //已支付去取消
+            OrderRequest orderRequest = new OrderRequest();
+            orderRequest.setOrderStatus(OrderStatusEnum.CANCELED_PAID.getCode());
+            doCancel(tOrder,orderRequest);
+        }
     }
 }
