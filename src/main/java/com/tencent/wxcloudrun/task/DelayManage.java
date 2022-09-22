@@ -43,7 +43,7 @@ public class DelayManage {
                 }else{
                     //计算剩余时间并放到队列中
                     final Duration between = Duration.between(LocalDateTime.now(), localDateTime);
-                    DelayTask delayTask = new DelayTask(tOrder.getOrderNum(),between.toSeconds());
+                    DelayTask delayTask = new DelayTask(tOrder.getOrderNum(),between.getSeconds());
                     delayService.put(delayTask);
                 }
             }
