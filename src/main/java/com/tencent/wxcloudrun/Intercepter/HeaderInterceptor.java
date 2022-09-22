@@ -54,6 +54,7 @@ public class HeaderInterceptor implements HandlerInterceptor {
             if(null != businessHeader){
                 String name = businessHeader.name();
                 String value = request.getHeader(name);
+                log.info("name={},value={}",name,value);
                 boolean required = businessHeader.required();
                 if(null != value){
                     field.set(commonHeader, ConvertUtils.convert(value,field.getType()));

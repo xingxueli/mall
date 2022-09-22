@@ -12,6 +12,7 @@ import com.github.binarywang.wxpay.bean.request.WxPayUnifiedOrderRequest;
 import com.github.binarywang.wxpay.bean.result.WxPayRefundResult;
 import com.github.binarywang.wxpay.exception.WxPayException;
 import com.github.binarywang.wxpay.service.WxPayService;
+import com.google.common.base.Preconditions;
 import com.tencent.wxcloudrun.Intercepter.HeaderContext;
 import com.tencent.wxcloudrun.dao.OrderMapper;
 import com.tencent.wxcloudrun.dto.*;
@@ -27,6 +28,9 @@ import com.tencent.wxcloudrun.service.GuestRoomService;
 import com.tencent.wxcloudrun.service.HotelRegisterService;
 import com.tencent.wxcloudrun.service.OrderService;
 import com.tencent.wxcloudrun.service.PayLogService;
+import com.tencent.wxcloudrun.task.DelayService;
+import com.tencent.wxcloudrun.task.DelayTask;
+import com.tencent.wxcloudrun.utils.ConstantUtil;
 import com.tencent.wxcloudrun.utils.DateUtils;
 import com.tencent.wxcloudrun.utils.IpUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +42,9 @@ import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
@@ -61,6 +67,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
 
     @Autowired
     PayLogService payLogService;
+
+    @Autowired
+    DelayService delayService;
 
     private static final String CALLBACK_ADDRESS = "https://springboot-krih-3055-4-1313299760.sh.run.tcloudbase.com";
 
@@ -103,6 +112,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
             orderVo.setPredictEndTime(r.getEndTime());
             orderVo.setPredictStartTime(r.getStartTime());
             orderVo.setQuantity(r.getDays());
+            LocalDateTime localDateTime = DateUtils.toLocalDateTime(r.getCreateTime());
+            localDateTime.plusMinutes(ConstantUtil.THIRTY_MINUTES);
+            orderVo.setAutoCancelTime(String.valueOf(DateUtils.getTime(localDateTime)));
             buildButtonVos(orderVo,r);
 
             List<OrderItemVo> orderItemVos = new ArrayList<>();
@@ -310,6 +322,23 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
         this.updateById(condition);
     }
 
+    @Override
+    public void autoCancelOrder(String orderNum){
+        Preconditions.checkNotNull(orderNum);
+        QueryWrapper<TOrder> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("order_num",orderNum);
+        final TOrder tOrder = this.getOne(queryWrapper);
+        if(tOrder == null){
+            return;
+        }
+
+        TOrder condition = new TOrder();
+        condition.setCancelTime(new Date());
+        condition.setId(tOrder.getId());
+        condition.setOrderStatus(OrderStatusEnum.CANCELED_UNPIAD.getCode());
+        this.updateById(condition);
+    }
+
     public AppletOrderResponse create(OrderRequest orderRequest, HttpServletRequest request){
         log.info("OrderServiceImpl, create: {}", JSON.toJSONString(orderRequest));
         String orderNum = orderRequest.getOrderNum();
@@ -338,6 +367,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
             hotelRegisterRequest.setOrderNum(orderNum);
             hotelRegisterRequest.setOrderId(order.getId());
             hotelRegisterService.saveHotelRegister(hotelRegisterRequest, CheckType.UNCHECK.getCode());
+            //添加订单的30分钟超时任务
+            addTask(orderNum);
         }
 
 
@@ -397,7 +428,15 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
         hotelRegisterRequest.setOrderNum(orderNum);
         hotelRegisterRequest.setOrderId(order.getId());
         hotelRegisterService.saveHotelRegister(hotelRegisterRequest,CheckType.UNCHECK.getCode());
+        //添加订单的30分钟超时任务
+        addTask(orderNum);
         return saveResult;
+    }
+
+    private void addTask(String orderNum){
+        //添加订单的30分钟超时任务
+        DelayTask delayTask = new DelayTask(orderNum,ConstantUtil.THIRTY_MINUTES * 60);
+        delayService.put(delayTask);
     }
 
     public boolean webUpdate(OrderRequest orderRequest){
@@ -542,5 +581,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
             orderRequest.setOrderStatus(OrderStatusEnum.CANCELED_PAID.getCode());
             doCancel(tOrder,orderRequest);
         }
+    }
+
+    @Override
+    public List<TOrder> getOrderTaskList(Integer orderStatus){
+        QueryWrapper<TOrder> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("order_status", orderStatus);
+        return this.list(queryWrapper);
     }
 }

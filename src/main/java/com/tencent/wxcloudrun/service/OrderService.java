@@ -19,4 +19,6 @@ public interface OrderService extends IService<TOrder>{
     OrderVo detail(String orderNum);
     void payNotify(String xmlData);
     void refundNotify(String xmlData);
+    void autoCancelOrder(String orderNum);
+    List<TOrder> getOrderTaskList(Integer orderStatus);
 }

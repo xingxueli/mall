@@ -13,12 +13,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 
-/**
- * <p>DateUtil class.</p>
- *
- * @author mike
- * @version $Id: $Id
- */
 public class DateUtil extends DateUtils {
     /** Constant <code>DATE_FORMAT="yyyy-MM-dd"</code> */
     public static String DATE_FORMAT = "yyyy-MM-dd";
