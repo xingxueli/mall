@@ -28,4 +28,7 @@ public class CommonHeader {
     @BusinessHeader(name = Headers.FORWARDED)
     private String forwarded;
 
+    @BusinessHeader(name = Headers.OPENAPI_SEQID)
+    private String openapiSeqid;
+
 }

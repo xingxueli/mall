@@ -20,4 +20,6 @@ public class Headers {
 
     public static final String FORWARDED = "X-Forwarded-For";//客户端 IPv4 或IPv6 地址
 
+    public static final String OPENAPI_SEQID = "x-openapi-seqid";//如果云调用请求正常，会在返回的 Header 中附带云调用唯一的 x-openapi-seqid，代表该请求正在使用云调用链路
+
 }
