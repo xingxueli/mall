@@ -83,7 +83,8 @@ public class OrderController {
         Preconditions.checkNotNull(orderRequest.getPredictStartTime());
         Preconditions.checkNotNull(orderRequest.getPredictEndTime());
         Preconditions.checkNotNull(orderRequest.getGuestRoomId());
-        Preconditions.checkNotNull(orderRequest.getRemark());
+        //选填
+//        Preconditions.checkNotNull(orderRequest.getRemark());
         Preconditions.checkNotNull(orderRequest.getTotalAmount());
         Preconditions.checkNotNull(orderRequest.getPayType());
         Preconditions.checkNotNull(orderRequest.getPayWay());
