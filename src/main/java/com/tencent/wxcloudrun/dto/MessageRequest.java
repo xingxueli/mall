@@ -2,6 +2,8 @@ package com.tencent.wxcloudrun.dto;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * {
  *   "ToUserName": "gh_919b00572d95", // 小程序/公众号的原始ID，资源复用配置多个时可以区别消息是给谁的
@@ -22,6 +24,7 @@ public class MessageRequest {
   private Long CreateTime;
   private String MsgType;
   private String Content;
-  private Long MsgId;
+  private String Event;
+  private List<MessageDetailRequest> List;
 
 }
