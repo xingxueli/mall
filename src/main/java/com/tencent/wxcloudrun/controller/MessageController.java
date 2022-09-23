@@ -89,7 +89,7 @@ public class MessageController {
             "          \"value\": \"2015年01月05日\"\n" +
             "      },\n" +
             "      \"amount3\": {\n" +
-            "          \"value\": \"TIT创意园\"\n" +
+            "          \"value\": \"20.5元\"\n" +
             "      } ,\n" +
             "      \"thing4\": {\n" +
             "          \"value\": \"TIT创意园\"\n" +
