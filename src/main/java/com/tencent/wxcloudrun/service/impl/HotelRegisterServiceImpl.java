@@ -4,11 +4,15 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tencent.wxcloudrun.dao.HotelRegisterMapper;
 import com.tencent.wxcloudrun.dto.HotelRegisterRequest;
 import com.tencent.wxcloudrun.enums.CheckType;
+import com.tencent.wxcloudrun.enums.MessageTypeEnum;
 import com.tencent.wxcloudrun.enums.RoomStatus;
 import com.tencent.wxcloudrun.model.GuestRoom;
 import com.tencent.wxcloudrun.model.HotelRegister;
+import com.tencent.wxcloudrun.model.TOrder;
 import com.tencent.wxcloudrun.service.GuestRoomService;
 import com.tencent.wxcloudrun.service.HotelRegisterService;
+import com.tencent.wxcloudrun.service.MessageService;
+import com.tencent.wxcloudrun.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +23,12 @@ public class HotelRegisterServiceImpl extends ServiceImpl<HotelRegisterMapper, H
 
     @Autowired
     GuestRoomService guestRoomService;
+
+    @Autowired
+    MessageService messageService;
+
+    @Autowired
+    OrderService orderService;
 
     public void saveHotelRegister(HotelRegisterRequest hotelRegisterRequest,int checkType){
         HotelRegister hotelRegister = new HotelRegister();
@@ -55,6 +65,9 @@ public class HotelRegisterServiceImpl extends ServiceImpl<HotelRegisterMapper, H
         guestRoom.setId(hotelRegisterRequest.getGuestRoomId());
         guestRoom.setRoomStatus(roomStatus);
         guestRoomService.updateById(guestRoom);
+        //入住给小程序发送通知
+        final TOrder tOrder = orderService.getById(hotelRegisterRequest.getOrderId());
+        messageService.sendSubscribeMessageAsync(MessageTypeEnum.CHECKED_IN,tOrder,orderService.getRoomAndHotelRegister(tOrder.getId()));
     }
 
 }

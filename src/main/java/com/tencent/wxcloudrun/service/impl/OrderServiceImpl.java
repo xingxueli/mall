@@ -16,18 +16,12 @@ import com.google.common.base.Preconditions;
 import com.tencent.wxcloudrun.Intercepter.HeaderContext;
 import com.tencent.wxcloudrun.dao.OrderMapper;
 import com.tencent.wxcloudrun.dto.*;
-import com.tencent.wxcloudrun.enums.CheckType;
-import com.tencent.wxcloudrun.enums.OrderButtonTypes;
-import com.tencent.wxcloudrun.enums.OrderStatusEnum;
-import com.tencent.wxcloudrun.enums.PayType;
+import com.tencent.wxcloudrun.enums.*;
 import com.tencent.wxcloudrun.model.GuestRoom;
 import com.tencent.wxcloudrun.model.HotelRegister;
 import com.tencent.wxcloudrun.model.PayLog;
 import com.tencent.wxcloudrun.model.TOrder;
-import com.tencent.wxcloudrun.service.GuestRoomService;
-import com.tencent.wxcloudrun.service.HotelRegisterService;
-import com.tencent.wxcloudrun.service.OrderService;
-import com.tencent.wxcloudrun.service.PayLogService;
+import com.tencent.wxcloudrun.service.*;
 import com.tencent.wxcloudrun.task.DelayService;
 import com.tencent.wxcloudrun.task.DelayTask;
 import com.tencent.wxcloudrun.utils.ConstantUtil;
@@ -70,6 +64,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
 
     @Autowired
     DelayService delayService;
+
+    @Autowired
+    MessageService messageService;
 
     private static final String CALLBACK_ADDRESS = "https://springboot-krih-3055-4-1313299760.sh.run.tcloudbase.com";
 
@@ -255,7 +252,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
         }).collect(Collectors.toList());
     }
 
-    private RoomAndHotelRegisterDto getRoomAndHotelRegister(Integer orderId){
+    public RoomAndHotelRegisterDto getRoomAndHotelRegister(Integer orderId){
         RoomAndHotelRegisterDto roomAndHotelRegisterDto = new RoomAndHotelRegisterDto();
         QueryWrapper<HotelRegister> queueWrapper = new QueryWrapper<>();
         queueWrapper.eq("order_id",orderId);
@@ -295,6 +292,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
                 wxPayRefundRequest.setRefundFee(new BigDecimal(tOrder.getTotalAmount()).multiply(new BigDecimal(100)).intValue());
                 wxPayRefundRequest.setNotifyUrl(CALLBACK_ADDRESS.concat("/order/refundNotify"));
                 result = wxPayService.refund(wxPayRefundRequest);
+                //只有退款成功，才给发真正的取消通知，如果未发生支付，没必要发送
+                messageService.sendSubscribeMessageAsync(MessageTypeEnum.ORDER_CANCELED,tOrder,getRoomAndHotelRegister(tOrder.getId()));
             } catch (WxPayException e) {
                 log.info("WxPayException={}",e);
             }
@@ -320,6 +319,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
         condition.setId(tOrder.getId());
         condition.setOrderStatus(orderRequest.getOrderStatus());
         this.updateById(condition);
+        //发送取消的订阅通知
+
     }
 
     @Override
@@ -546,6 +547,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
             payLog.setReturnData(orderNotifyResult.getReturnMsg());
             payLog.setOpenid(orderNotifyResult.getOpenid());
             payLogService.getBaseMapper().insert(payLog);
+            //支付成功，给小程序发送通知
+            messageService.sendSubscribeMessageAsync(MessageTypeEnum.ORDER_PAID,tOrder,getRoomAndHotelRegister(tOrder.getId()));
         }
     }
 

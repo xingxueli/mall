@@ -21,4 +21,5 @@ public interface OrderService extends IService<TOrder>{
     void refundNotify(String xmlData);
     void autoCancelOrder(String orderNum);
     List<TOrder> getOrderTaskList(Integer orderStatus);
+    RoomAndHotelRegisterDto getRoomAndHotelRegister(Integer orderId);
 }

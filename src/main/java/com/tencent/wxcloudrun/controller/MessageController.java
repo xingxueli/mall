@@ -5,9 +5,12 @@ import com.alibaba.fastjson.JSONObject;
 import com.tencent.wxcloudrun.Intercepter.HeaderContext;
 import com.tencent.wxcloudrun.dto.MessageRequest;
 import com.tencent.wxcloudrun.dto.MsgContent;
+import com.tencent.wxcloudrun.service.CounterService;
+import com.tencent.wxcloudrun.service.MessageService;
 import com.tencent.wxcloudrun.utils.WeChatUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -27,9 +30,11 @@ import org.springframework.web.bind.annotation.*;
 public class MessageController {
 
   final Logger logger;
+  final MessageService messageService;
 
-  public MessageController() {
+  public MessageController(@Autowired MessageService messageService) {
     this.logger = LoggerFactory.getLogger(MessageController.class);
+    this.messageService = messageService;
   }
 
   /**
@@ -40,9 +45,10 @@ public class MessageController {
    * @return
    */
   @PostMapping(value = "/receiveMsg")
-  String sendMsg(@RequestBody MessageRequest messageRequest) {
+  public String receiveMsg(@RequestBody MessageRequest messageRequest) {
     //todo 目前还不能接收通，因为需要管理员才能开通，可以让王博申请一个账号来搞这个事情
     logger.info("MessageController, sendMsg,messageRequest={}", JSON.toJSONString(messageRequest));
+    messageService.saveMessageCallBackNotify(messageRequest);
     return "success";
   }
 

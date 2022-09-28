@@ -1,5 +1,6 @@
 package com.tencent.wxcloudrun.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.util.List;
@@ -18,13 +19,17 @@ import java.util.List;
 @Data
 public class MessageRequest {
 
-  private String action;
+  @JsonProperty(value = "ToUserName")
   private String ToUserName;
+  @JsonProperty(value = "FromUserName")
   private String FromUserName;
-  private Long CreateTime;
+  @JsonProperty(value = "CreateTime")
+  private Integer CreateTime;
+  @JsonProperty(value = "MsgType")
   private String MsgType;
-  private String Content;
+  @JsonProperty(value = "Event")
   private String Event;
+  @JsonProperty(value = "List")
   private List<MessageDetailRequest> List;
 
 }
