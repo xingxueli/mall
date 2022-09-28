@@ -292,8 +292,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
                 wxPayRefundRequest.setRefundFee(new BigDecimal(tOrder.getTotalAmount()).multiply(new BigDecimal(100)).intValue());
                 wxPayRefundRequest.setNotifyUrl(CALLBACK_ADDRESS.concat("/order/refundNotify"));
                 result = wxPayService.refund(wxPayRefundRequest);
-                //只有退款成功，才给发真正的取消通知，如果未发生支付，没必要发送
-                messageService.sendSubscribeMessageAsync(MessageTypeEnum.ORDER_CANCELED,tOrder,getRoomAndHotelRegister(tOrder.getId()));
             } catch (WxPayException e) {
                 log.info("WxPayException={}",e);
             }
@@ -583,6 +581,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, TOrder> implement
             OrderRequest orderRequest = new OrderRequest();
             orderRequest.setOrderStatus(OrderStatusEnum.CANCELED_PAID.getCode());
             doCancel(tOrder,orderRequest);
+            //只有退款成功，才给发真正的取消通知，如果未发生支付，没必要发送
+            messageService.sendSubscribeMessageAsync(MessageTypeEnum.ORDER_CANCELED,tOrder,getRoomAndHotelRegister(tOrder.getId()));
         }
     }
 

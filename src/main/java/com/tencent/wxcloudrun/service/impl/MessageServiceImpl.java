@@ -68,7 +68,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
 
     private Template1 buildTemplate1(TOrder tOrder, RoomAndHotelRegisterDto roomAndHotelRegister){
         Template1 template1 = new Template1();
-        template1.setTouser(HeaderContext.getHeaders().getOpenId());
+        template1.setTouser(tOrder.getUid());
         HashMap<String, ValueDetail> data = new HashMap<>();
         data.put("number1",ValueDetail.builder().value(tOrder.getOrderNum()).build());
         data.put("name2",ValueDetail.builder().value(tOrder.getOrderName()).build());
@@ -86,7 +86,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
 
     private Template2 buildTemplate2(TOrder tOrder, RoomAndHotelRegisterDto roomAndHotelRegister){
         Template2 template2 = new Template2();
-        template2.setTouser(HeaderContext.getHeaders().getOpenId());
+        template2.setTouser(tOrder.getUid());
         HashMap<String, ValueDetail> data = new HashMap<>();
         data.put("character_string1",ValueDetail.builder().value(tOrder.getOrderNum()).build());
         data.put("thing2",ValueDetail.builder().value(tOrder.getOrderName()).build());
@@ -104,7 +104,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
 
     private Template3 buildTemplate3(TOrder tOrder, RoomAndHotelRegisterDto roomAndHotelRegister){
         Template3 template3 = new Template3();
-        template3.setTouser(HeaderContext.getHeaders().getOpenId());
+        template3.setTouser(tOrder.getUid());
         HashMap<String, ValueDetail> data = new HashMap<>();
         //温馨提示
         String tipsContent = "已给您办理入住，房间号是"+roomAndHotelRegister.getGuestRoom().getRoomNum();
