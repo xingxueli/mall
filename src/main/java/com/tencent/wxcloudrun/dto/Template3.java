@@ -36,7 +36,7 @@ import java.util.HashMap;
 public class Template3 {
     private String touser;//OPENID
     private String template_id = "iWEjfRGKgZBn_Wr1QMB79CtXBrRA-L3lxhDidN2ouQQ";
-    private String page = "index";//index
+    private String page = "pages/order/order-list/index";//index
     private String miniprogram_state = ConstantUtil.MINIPROGRAM_STATE;
     private String lang = "zh_CN";//
     private HashMap<String,ValueDetail> data;//
